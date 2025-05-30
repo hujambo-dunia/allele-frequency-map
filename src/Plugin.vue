@@ -8,7 +8,7 @@ https://www.youtube.com/watch?v=UAQogFwyna0
             Base Layer:
             <select v-model="selectedBase" @change="switchBaseLayer">
                 <option v-for="(layer, name) in mapLayers" :key="name" :value="name">
-                {{ name }}
+                    {{ name }}
                 </option>
             </select>
             <SelectField v-if="features" :features="features" @select="selectGene" />
@@ -38,15 +38,15 @@ defineProps<{
 }>();
 
 const mapElement = ref(null);
-const selectedBase = ref('OpenStreetMap');
+const selectedBase = ref("OpenStreetMap");
 const features = ref();
 
 let map, vectorLayer, vectorSource, overlay;
 
 function switchBaseLayer() {
     Object.entries(mapLayers).forEach(([name, layer]) => {
-        layer.setVisible(name === selectedBase.value)
-    })
+        layer.setVisible(name === selectedBase.value);
+    });
 }
 
 function createPieChartIcon(allele_frequency) {
@@ -84,10 +84,7 @@ onMounted(async () => {
 
     map = new Map({
         target: mapElement.value,
-        layers: [
-            ...baseLayerArray,
-            vectorLayer
-        ],
+        layers: [...baseLayerArray, vectorLayer],
         view: new View({
             center: fromLonLat([0, 0]),
             zoom: 2,
@@ -95,7 +92,7 @@ onMounted(async () => {
         overlays: [overlay],
     });
 
-    const {data: featureData } = await axios.get("1.json");
+    const { data: featureData } = await axios.get("1.json");
     features.value = featureData;
     featureData.forEach((featureData) => {
         const freq = parseFloat(featureData.average_allele_frequency);
@@ -137,18 +134,17 @@ onMounted(async () => {
         }
     });
 });
-
 </script>
 
 <style>
-    .ol-popup {
-        position: absolute;
-        background-color: white;
-        padding: 5px;
-        border: 1px solid #ccc;
-        bottom: 12px;
-        left: -50px;
-        min-width: 100px;
-        z-index: 1000;
-    }
+.ol-popup {
+    position: absolute;
+    background-color: white;
+    padding: 5px;
+    border: 1px solid #ccc;
+    bottom: 12px;
+    left: -50px;
+    min-width: 100px;
+    z-index: 1000;
+}
 </style>
