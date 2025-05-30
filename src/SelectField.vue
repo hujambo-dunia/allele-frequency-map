@@ -21,13 +21,16 @@
     </span>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
-import { featuresDataStubbed } from "../public/sample_markers.js";
+
+const props = defineProps<{
+    features: any;
+}>();
 
 const searchTerm = ref('')
 const selectedGene = ref('')
-const allGenes = [...new Set(featuresDataStubbed.map(f => f.gene))].sort()
+const allGenes = [...new Set(props.features.map(f => f.gene))].sort()
 const filteredGenes = ref(allGenes)
 
 function filterGenes() {

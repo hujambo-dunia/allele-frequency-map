@@ -11,17 +11,13 @@ https://www.youtube.com/watch?v=UAQogFwyna0
                 {{ name }}
                 </option>
             </select>
-            <SelectField
-                :options="Object.keys(featuresDataStubbed[0])"
-                v-model="selectedGene"
-                @select="selectGene"
-            />
+            <SelectField v-if="features" :features="features" @select="selectGene" />
         </div>
         <div ref="mapElement" class="w-full flex-grow h-[600px]" />
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
 import "ol/ol.css";
 import Map from "ol/Map";
@@ -33,12 +29,17 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { Style, Icon } from "ol/style";
 import Overlay from "ol/Overlay";
-import { featuresDataStubbed } from "../public/sample_markers.js";
-import { mapLayers } from "../public/map_layers.js";
+import { mapLayers } from "./layers.js";
 import SelectField from "./SelectField.vue";
+import axios from "axios";
+
+defineProps<{
+    datasetId?: string;
+}>();
 
 const mapElement = ref(null);
 const selectedBase = ref('OpenStreetMap');
+const features = ref();
 
 let map, vectorLayer, vectorSource, overlay;
 
@@ -68,7 +69,7 @@ function createPieChartIcon(allele_frequency) {
     return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
-onMounted(() => {
+onMounted(async () => {
     const baseLayerArray = Object.values(mapLayers);
     vectorSource = new VectorSource();
     vectorLayer = new VectorLayer({ source: vectorSource });
@@ -94,7 +95,9 @@ onMounted(() => {
         overlays: [overlay],
     });
 
-    featuresDataStubbed.forEach((featureData) => {
+    const {data: featureData } = await axios.get("1.json");
+    features.value = featureData;
+    featureData.forEach((featureData) => {
         const freq = parseFloat(featureData.average_allele_frequency);
         const marker = new Feature({
             geometry: new Point(fromLonLat([parseFloat(featureData.longitude), parseFloat(featureData.latitude)])),
