@@ -24,10 +24,8 @@ async function main() {
         // Construct the incoming data object with mock configuration and data
         const dataIncoming = {
             visualization_config: {
-                // Placeholder for dataset URL (can be replaced during actual development)
-                dataset_url: "MY_DATASET_URL",
                 // Placeholder for dataset ID
-                dataset_id: process.env.dataset_id,
+                dataset_id: process.env.dataset_id || "unavailable",
                 // Placeholder for additional visualization settings
                 settings: {},
             },
@@ -46,8 +44,6 @@ async function main() {
      * This initializes the Vue app, rendering the root component
      * and passing in any necessary props such as credentials.
      */
-    console.log('Mounting app with container:', container);
-    console.log('Mounting app with credentials:', process.env.credentials);
     createApp({
         render: () => h(App, { container: container, credentials: process.env.credentials }),
     }).mount(`#${container}`);

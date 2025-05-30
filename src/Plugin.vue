@@ -8,20 +8,16 @@ https://www.youtube.com/watch?v=UAQogFwyna0
             Base Layer:
             <select v-model="selectedBase" @change="switchBaseLayer">
                 <option v-for="(layer, name) in mapLayers" :key="name" :value="name">
-                {{ name }}
+                    {{ name }}
                 </option>
             </select>
-            <SelectField
-                :options="Object.keys(featuresDataStubbed[0])"
-                v-model="selectedGene"
-                @select="selectGene"
-            />
+            <SelectField v-if="features" :features="features" @select="selectGene" />
         </div>
         <div ref="mapElement" class="w-full flex-grow h-[600px]" />
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
 import "ol/ol.css";
 import Map from "ol/Map";
@@ -33,19 +29,24 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { Style, Icon } from "ol/style";
 import Overlay from "ol/Overlay";
-import { featuresDataStubbed } from "../public/sample_markers.js";
-import { mapLayers } from "../public/map_layers.js";
+import { mapLayers } from "./layers.js";
 import SelectField from "./SelectField.vue";
+import axios from "axios";
+
+defineProps<{
+    datasetId?: string;
+}>();
 
 const mapElement = ref(null);
-const selectedBase = ref('OpenStreetMap');
+const selectedBase = ref("OpenStreetMap");
+const features = ref();
 
 let map, vectorLayer, vectorSource, overlay;
 
 function switchBaseLayer() {
     Object.entries(mapLayers).forEach(([name, layer]) => {
-        layer.setVisible(name === selectedBase.value)
-    })
+        layer.setVisible(name === selectedBase.value);
+    });
 }
 
 function createPieChartIcon(allele_frequency) {
@@ -68,7 +69,7 @@ function createPieChartIcon(allele_frequency) {
     return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
-onMounted(() => {
+onMounted(async () => {
     const baseLayerArray = Object.values(mapLayers);
     vectorSource = new VectorSource();
     vectorLayer = new VectorLayer({ source: vectorSource });
@@ -83,10 +84,7 @@ onMounted(() => {
 
     map = new Map({
         target: mapElement.value,
-        layers: [
-            ...baseLayerArray,
-            vectorLayer
-        ],
+        layers: [...baseLayerArray, vectorLayer],
         view: new View({
             center: fromLonLat([0, 0]),
             zoom: 2,
@@ -94,7 +92,9 @@ onMounted(() => {
         overlays: [overlay],
     });
 
-    featuresDataStubbed.forEach((featureData) => {
+    const { data: featureData } = await axios.get("1.json");
+    features.value = featureData;
+    featureData.forEach((featureData) => {
         const freq = parseFloat(featureData.average_allele_frequency);
         const marker = new Feature({
             geometry: new Point(fromLonLat([parseFloat(featureData.longitude), parseFloat(featureData.latitude)])),
@@ -134,18 +134,17 @@ onMounted(() => {
         }
     });
 });
-
 </script>
 
 <style>
-    .ol-popup {
-        position: absolute;
-        background-color: white;
-        padding: 5px;
-        border: 1px solid #ccc;
-        bottom: 12px;
-        left: -50px;
-        min-width: 100px;
-        z-index: 1000;
-    }
+.ol-popup {
+    position: absolute;
+    background-color: white;
+    padding: 5px;
+    border: 1px solid #ccc;
+    bottom: 12px;
+    left: -50px;
+    min-width: 100px;
+    z-index: 1000;
+}
 </style>

@@ -9,9 +9,9 @@ ESRI World Imagery is not open source, but available for non-commercial public u
 * https://developers.arcgis.com/rest/basemap-styles/#pricing
 */
 
-import TileLayer from 'ol/layer/Tile';
-import XYZ from 'ol/source/XYZ';
-import OSM from 'ol/source/OSM';
+import TileLayer from "ol/layer/Tile";
+import XYZ from "ol/source/XYZ";
+import OSM from "ol/source/OSM";
 
 export const mapLayers = {
     /* License: Open Database License (ODbL)

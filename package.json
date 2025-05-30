@@ -4,8 +4,7 @@
     "type": "module",
     "license": "MIT",
     "files": [
-        "static/dist/index.js",
-        "static/dist/index.css"
+        "static"
     ],
     "scripts": {
         "dev": "vite",
@@ -21,7 +20,8 @@
         "@vitejs/plugin-vue": "^5.0.5",
         "@vitest/ui": "^3.0.9",
         "autoprefixer": "^10.4.19",
-        "galaxy-charts": "^0.0.70",
+        "axios": "^1.9.0",
+        "galaxy-charts": "^0.0.73",
         "galaxy-charts-xml-parser": "^1.0.3",
         "jsdom": "^25.0.1",
         "postcss": "^8.4.40",
