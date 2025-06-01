@@ -1,5 +1,5 @@
 <template>
-    <span class="ml-4">
+    <span class="ml-4 selectField">
         <input type="text" v-model="searchTerm" placeholder="Search gene..." @input="filterGenes" />
         <ul v-if="filteredGenes.length && searchTerm">
             <li v-for="gene in filteredGenes" :key="gene" @click="selectGene(gene)" style="cursor: pointer">
@@ -7,7 +7,7 @@
             </li>
         </ul>
 
-        <p v-if="selectedGene">Selected: {{ selectedGene }}</p>
+        <span v-if="selectedGene" class="ml-3">Selected: {{ selectedGene }}</span>
     </span>
 </template>
 
@@ -18,25 +18,36 @@ const props = defineProps<{
     features: any;
 }>();
 
+const emit = defineEmits<{
+  (e: 'select', gene: string): void;
+}>();
+
 const searchTerm = ref("");
 const selectedGene = ref("");
-const allGenes = [...new Set(props.features.map((f) => f.gene))].sort();
-const filteredGenes = ref(allGenes);
+const genes = [...new Set(props.features.map((f) => f.gene))].sort();
+const filteredGenes = ref(genes);
 
 function filterGenes() {
     const term = searchTerm.value.toLowerCase();
-    filteredGenes.value = allGenes.filter((g) => g.toLowerCase().includes(term));
+    filteredGenes.value = genes.filter((g) => g.toLowerCase().includes(term));
 }
 
 function selectGene(gene) {
     selectedGene.value = gene;
     searchTerm.value = gene;
     filteredGenes.value = [];
+    emit('select', gene);
 }
 </script>
 
-<style>
+<style scoped>
+.selectField {
+    position: relative;
+    display: inline-block;
+}
 ul {
+    position: absolute;
+    z-index: 4;
     list-style: none;
     padding: 0;
     margin: 4px 0;

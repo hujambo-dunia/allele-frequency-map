@@ -1,20 +1,21 @@
-<!-- WATCH AND LEARN: 
-https://www.youtube.com/watch?v=UAQogFwyna0
--->
-
 <template>
-    <div class="flex flex-col h-full">
-        <div class="p-2 bg-gray-100 text-sm">
-            Base Layer:
-            <select v-model="selectedBase" @change="switchBaseLayer">
-                <option v-for="(layer, name) in mapLayers" :key="name" :value="name">
-                    {{ name }}
-                </option>
-            </select>
-            <SelectField v-if="features" :features="features" @select="selectGene" />
-        </div>
-        <div ref="mapElement" class="w-full flex-grow h-[600px]" />
+  <div class="flex flex-row h-screen w-screen">
+    <div ref="mapContainer" class="flex-grow w-full h-full relative overflow-visible" />
+    <div class="w-[300px] bg-gray-100 p-4 text-sm">
+      <div class="mb-4">
+        <label class="block font-medium mb-1">Gene:</label>
+        <SelectField v-if="features" :features="features" @select="handleGeneSelect" />
+      </div>
+      <div>
+        <label class="block font-medium mb-1">Base Layer:</label>
+        <select v-model="selectedBase" @change="switchBaseLayer" class="w-full p-1 border rounded">
+          <option v-for="(layer, name) in baseLayer" :key="name" :value="name">
+            {{ name }}
+          </option>
+        </select>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -29,7 +30,7 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { Style, Icon } from "ol/style";
 import Overlay from "ol/Overlay";
-import { mapLayers } from "./layers.js";
+import { baseLayer } from "./baseLayer.js";
 import SelectField from "./SelectField.vue";
 import axios from "axios";
 
@@ -37,14 +38,14 @@ defineProps<{
     datasetId?: string;
 }>();
 
-const mapElement = ref(null);
+const mapContainer = ref(null);
 const selectedBase = ref("OpenStreetMap");
 const features = ref();
 
 let map, vectorLayer, vectorSource, overlay;
 
 function switchBaseLayer() {
-    Object.entries(mapLayers).forEach(([name, layer]) => {
+    Object.entries(baseLayer).forEach(([name, layer]) => {
         layer.setVisible(name === selectedBase.value);
     });
 }
@@ -69,8 +70,47 @@ function createPieChartIcon(allele_frequency) {
     return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
+function setMapSize(map, window) {
+    map.updateSize();
+    window.addEventListener("resize", () => map.updateSize());
+}
+
+function handleGeneSelect(gene: string) {
+  overlay.setPosition(undefined); /* Clear the overlay tool tips */
+  vectorSource.clear();
+
+  const filtered = features.value.filter((f) => f.gene === gene);
+
+  filtered.forEach((featureData) => {
+    const freq = parseFloat(featureData.average_allele_frequency);
+    const marker = new Feature({
+      geometry: new Point(
+        fromLonLat([
+          parseFloat(featureData.longitude),
+          parseFloat(featureData.latitude),
+        ])
+      ),
+      average_allele_frequency: freq,
+      country: featureData.country,
+      admin_level_1: featureData.admin_level_1,
+      gene: featureData.gene,
+    });
+
+    marker.setStyle(
+      new Style({
+        image: new Icon({
+          src: createPieChartIcon(freq),
+          scale: 0.6,
+        }),
+      })
+    );
+
+    vectorSource.addFeature(marker);
+  });
+}
+
 onMounted(async () => {
-    const baseLayerArray = Object.values(mapLayers);
+    const baseLayerArray = Object.values(baseLayer);
     vectorSource = new VectorSource();
     vectorLayer = new VectorLayer({ source: vectorSource });
 
@@ -83,7 +123,7 @@ onMounted(async () => {
     overlay.getElement().style = "background: white; padding: 6px; border: 1px solid #ccc; border-radius: 4px;";
 
     map = new Map({
-        target: mapElement.value,
+        target: mapContainer.value,
         layers: [...baseLayerArray, vectorLayer],
         view: new View({
             center: fromLonLat([0, 0]),
@@ -98,9 +138,10 @@ onMounted(async () => {
         const freq = parseFloat(featureData.average_allele_frequency);
         const marker = new Feature({
             geometry: new Point(fromLonLat([parseFloat(featureData.longitude), parseFloat(featureData.latitude)])),
-            allele_frequency: freq,
+            average_allele_frequency: freq,
             country: featureData.country,
             admin_level_1: featureData.admin_level_1,
+            gene: featureData.gene,
         });
 
         marker.setStyle(
@@ -113,6 +154,8 @@ onMounted(async () => {
         );
 
         vectorSource.addFeature(marker);
+
+        setMapSize(map, window);
     });
 
     map.on("pointermove", function (evt) {
@@ -121,11 +164,15 @@ onMounted(async () => {
             const freq = feature.get("average_allele_frequency");
             const country = feature.get("country");
             const admin = feature.get("admin_level_1");
+            const gene = feature.get("gene");
             overlay.getElement().innerHTML = `
         <div style="text-align: center">
-          <img src="${createPieChartIcon(freq)}" width="40" /><br/>
+          <img src="${createPieChartIcon(freq)}" width="40" style="margin: auto;" /><br/>
           <strong>${country}</strong><br/>
-          ${admin}
+          ${admin}<br/><br/>
+          <hr/>
+          <strong>Average A.F.:</strong> ${freq}<br/>
+          <strong>Gene:</strong> ${gene}<br/><br/>
         </div>
       `;
             overlay.setPosition(evt.coordinate);
@@ -136,7 +183,7 @@ onMounted(async () => {
 });
 </script>
 
-<style>
+<style scoped>
 .ol-popup {
     position: absolute;
     background-color: white;
