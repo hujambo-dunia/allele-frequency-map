@@ -1,0 +1,33 @@
+<visualization name="allele_frequency_map" title="Custom Map with Layer and Center Controls" plugin_type="generic">
+    <description>Allele Frequency Map using the OpenLayers Library.</description>
+    <data_sources>
+        <data_source>
+            <model_class>HistoryDatasetAssociation</model_class>
+            <test test_attr="ext">json</test>
+        </data_source>
+    </data_sources>
+    <params>
+        <param required="true">dataset_id</param>
+    </params>
+    <entry_point entry_point_type="script" src="index.js" css="index.css" />
+    <settings>
+        <input>
+            <label>Map Baselayer</label>
+            <name>map_baselayer</name>
+            <help>Select a base layer for the map.</help>
+            <type>select</type>
+            <display>radio</display>
+            <value>OpenStreetMap</value>
+            <data>
+                <data>
+                    <label>OpenStreetMap</label>
+                    <value>OpenStreetMap</value>
+                </data>
+                <data>
+                    <label>Carto Light (printer-friendly)</label>
+                    <value>Carto Light</value>
+                </data>
+            </data>
+        </input>
+    </settings>
+</visualization>
