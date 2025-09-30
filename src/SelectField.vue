@@ -1,13 +1,11 @@
 <template>
-    <span class="ml-4 selectField">
-        <input type="text" v-model="searchTerm" placeholder="Search gene..." @input="filterGenes" />
+    <span class="selectField">
+        <input type="text" v-model="searchTerm" placeholder="Search gene..." class="px-2 py-1 border" @input="filterGenes" />
         <ul v-if="filteredGenes.length && searchTerm">
             <li v-for="gene in filteredGenes" :key="gene" @click="selectGene(gene)" style="cursor: pointer">
                 {{ gene }}
             </li>
         </ul>
-
-        <span v-if="selectedGene" class="ml-3">Selected: {{ selectedGene }}</span>
     </span>
 </template>
 
