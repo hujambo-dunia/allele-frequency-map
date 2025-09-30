@@ -10,4 +10,24 @@
         <param required="true">dataset_id</param>
     </params>
     <entry_point entry_point_type="script" src="index.js" css="index.css" />
+    <settings>
+        <input>
+            <label>Map Baselayer</label>
+            <name>map_baselayer</name>
+            <help>Select a base layer for the map.</help>
+            <type>select</type>
+            <display>radio</display>
+            <value>OpenStreetMap</value>
+            <data>
+                <data>
+                    <label>OpenStreetMap</label>
+                    <value>OpenStreetMap</value>
+                </data>
+                <data>
+                    <label>Carto Light (printer-friendly)</label>
+                    <value>Carto Light</value>
+                </data>
+            </data>
+        </input>
+    </settings>
 </visualization>
