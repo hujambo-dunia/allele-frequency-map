@@ -10,14 +10,13 @@ Designed for use inside of [Galaxy Project](https://github.com/galaxyproject/gal
 
 ### Utilizes existing infrasctructure dependency (OpenLayers)
 
-#### Refers to third-party [map] baselayer library with full citations (OL)
-
+* Refers to third-party [map] baselayer library with full citations (OL)
 * Restricts baselayer options to public-use, non-rate limited (XML)
 * Templatizes baselayer drop-down into Settings sidebar (Galaxy-Charts)
 * Preloads all map tiles upon init; user only shows/hides maps (Vue)
 * Adds map markers with tooltips from user dataset (Galaxy, MapViewer)
 
-#### Extends existing framework for custom functionality (Galaxy-Charts)
+### Extends existing framework for custom functionality (Galaxy-Charts)
 
 * Adds custom floating auto-complete drop-down field (Vue)
 * Componentizes select field for better code separation (Vue)
