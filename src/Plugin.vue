@@ -100,10 +100,16 @@ watch(
     <div class="flex flex-row h-screen w-screen">
         <div ref="mapContainer" class="flex-grow w-full h-full relative overflow-visible" />
         <div class="absolute top-4 right-4 bg-white p-4 rounded shadow">
-            <label class="block font-medium mb-1">Gene</label>
-            <div class="text-xs py-1">Filter data by gene</div>
-            <SelectField v-if="features" :features="features" @select="handleGeneSelect" />
-            <n-select v-model:value="selectedBase" :filterable="true" :options="mapBaselayerOptions" />
+            <div v-if="features" class="mb-3">
+                <div class="font-medium mb-1">Gene</div>
+                <div class="text-xs mb-1">Filter data by gene.</div>
+                <SelectField  :features="features" @select="handleGeneSelect" />
+            </div>
+            <div>
+                <div class="font-medium mb-1">Tile Layer</div>
+                <div class="text-xs mb-1">Select a tile layer.</div>
+                <n-select v-model:value="selectedBase" :filterable="true" :options="mapBaselayerOptions" />
+            </div>
         </div>
     </div>
 </template>
