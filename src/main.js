@@ -11,7 +11,7 @@ async function main() {
         if (import.meta.env.DEV) {
             const dataIncoming = {
                 visualization_config: {
-                    dataset_id: process.env.dataset_id || "unavailable",
+                    dataset_id: process.env.dataset_id,
                     settings: {},
                 },
             };
@@ -28,6 +28,7 @@ async function main() {
                 h(App, {
                     root: root,
                     datasetId: visualization_config.dataset_id,
+                    settings: visualization_config.settings,
                 }),
         }).mount(`#${container}`);
     } catch (error) {

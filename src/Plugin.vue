@@ -12,7 +12,6 @@ const TEST_DATASET = "1.json";
 
 interface Props {
     datasetId: string;
-    datasetUrl?: string;
     root?: string;
     settings?: {
         map_baselayer: string;
@@ -32,7 +31,7 @@ const layerOptions = ref(Object.keys(BaseLayers).map((x) => ({ label: x, value: 
 let mapViewer: any;
 
 async function initializeMap(): Promise<void> {
-    const dataUrl = props.datasetUrl || TEST_DATASET;
+    const dataUrl = props.datasetId ? `${props.root}api/datasets/${props.datasetId}/display` : TEST_DATASET;
     if (mapContainer.value) {
         try {
             const { data: featureData } = await axios.get(dataUrl);
