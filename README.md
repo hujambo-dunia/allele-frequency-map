@@ -4,7 +4,7 @@ Displays how often a genetic variant (allele) occurs across different geographic
 
 Designed for use inside of [Galaxy Project](https://github.com/galaxyproject/galaxy/issues) (via [Galaxy-Charts](https://github.com/galaxyproject/galaxy-charts/tree/main/src) framework).
 
-![Alt Text](demo_Gene_filter_and_Baselayer_settings.gif)
+![Alt Text](demo.gif)
 
 ## Feature Set
 
