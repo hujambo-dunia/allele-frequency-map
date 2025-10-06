@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from "vue";
-import "ol/ol.css";
-import SelectField from "./SelectField.vue";
 import { MapViewer } from "./MapViewer.js";
 import { NSelect } from "naive-ui";
 import BaseLayers from "./baseLayers.json";
+import SelectField from "./SelectField.vue";
+
+import "ol/ol.css";
 
 const BASELAYER_DEFAULT = "OpenStreetMap";
+const TEST_DATASET = "1.json";
 
 interface Props {
     datasetId: string;
@@ -23,29 +25,20 @@ const mapContainer = ref<HTMLElement | null>(null);
 const selectedBase = ref<string>(props.settings?.map_baselayer || BASELAYER_DEFAULT);
 const features = ref();
 
-const mapBaselayerOptions = computed(() =>
-    Object.entries(BaseLayers).map(([x, y]) => ({
-        label: x,
-        value: x,
-    })),
-);
+const mapBaselayerOptions = computed(() => Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
 
 let mapViewer: any;
 
 function handleGeneSelect(gene: string): void {
-    if (mapViewer) {
-        mapViewer.filterByGene(gene);
-    }
+    mapViewer?.filterByGene(gene);
 }
 
-async function _initializeMap(): Promise<void> {
-    const dataUrl = "1.json"; /* Use datasetUrl if provided, otherwise fall back to default */
-
+async function initializeMap(): Promise<void> {
+    const dataUrl = props.datasetUrl || TEST_DATASET;
     if (!mapContainer.value) {
         console.warn("Map container is not available");
         return;
     }
-
     try {
         mapViewer = new MapViewer({});
         await mapViewer.initAlleleMap(mapContainer.value, dataUrl);
@@ -56,43 +49,23 @@ async function _initializeMap(): Promise<void> {
     }
 }
 
-function _handleBaselayerNoReinitializeMap(newValues, oldValues) {
-    // Check if props changed - excluding settings.map_baselayer (mapBaselayer) to avoid double reinitialization)
-    const mapBaselayerChanged = newValues.mapBaselayer !== oldValues?.mapBaselayer;
-    const selectedBaseChanged = newValues.selectedBase !== oldValues?.selectedBase;
-
-    if (mapBaselayerChanged && newValues.mapBaselayer) {
-        selectedBase.value = newValues.mapBaselayer;
-        mapViewer.switchBaseLayer(newValues.mapBaselayer);
-    } else if (selectedBaseChanged && !mapBaselayerChanged) {
-        mapViewer.switchBaseLayer(newValues.selectedBase);
-    }
-}
-
 onMounted(() => {
-    _initializeMap();
+    initializeMap();
 });
 
 watch(
-    () => ({
-        props: props,
-        selectedBase: selectedBase.value,
-        mapBaselayer: props.settings?.map_baselayer,
-    }),
-    (newValues, oldValues) => {
-        const propsChanged = newValues.props !== oldValues?.props;
-
-        if (propsChanged) {
-            _initializeMap();
-            return;
-        }
-
-        if (mapViewer) {
-            _handleBaselayerNoReinitializeMap(newValues, oldValues);
-        }
+    () => props,
+    () => {
+        initializeMap();
     },
     { deep: true },
 );
+
+watch(selectedBase, (newValue) => {
+    if (mapViewer) {
+        mapViewer.switchBaseLayer(newValue);
+    }
+});
 </script>
 
 <template>
