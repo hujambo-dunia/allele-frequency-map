@@ -1,4 +1,4 @@
-<visualization name="Allele Frequency Map" embeddable="true">
+<visualization name="Genomic Allele Frequency Map" embeddable="true">
     <description>Allele Frequency Map using OpenLayers</description>
     <data_sources>
         <data_source>
@@ -16,7 +16,7 @@
         </test>
     </tests>
     <help format="markdown"><![CDATA[
-# What is Allele Frequency Map?
+# What is Genomic Allele Frequency Map?
 
 Allele Frequency Map Visualization provides an interactive way to explore the geographic distribution of genetic variants (alleles) across populations. By visualizing allele frequencies on a map, users can identify patterns of natural selection, population structure, or migration. This tool is useful for studying the spread of resistance alleles in pathogens, guiding research in public health, agriculture, and evolutionary biology.
 
