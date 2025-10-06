@@ -17,7 +17,7 @@ async function main() {
                 visualization_plugin: await parseXML("allele_frequency_map.xml"),
             };
             const appElement = document.getElementById(container);
-            
+
             if (appElement) {
                 appElement.dataset.incoming = JSON.stringify(dataIncoming);
             } else {
@@ -26,10 +26,11 @@ async function main() {
         }
 
         createApp({
-            render: () => h(App, { 
-                container: container, 
-                credentials: process.env.credentials 
-            }),
+            render: () =>
+                h(App, {
+                    container: container,
+                    credentials: process.env.credentials,
+                }),
         }).mount(`#${container}`);
     } catch (error) {
         console.error("Failed to initialize application:", error);

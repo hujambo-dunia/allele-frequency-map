@@ -32,8 +32,8 @@ export function MapViewer(mv = {}) {
      * @returns {string} Base64 encoded SVG data URI
      */
     mv.createPieChartIcon = (alleleFrequency) => {
-        if (typeof alleleFrequency !== 'number' || alleleFrequency < 0 || alleleFrequency > 1) {
-            console.warn('Invalid allele frequency value:', alleleFrequency);
+        if (typeof alleleFrequency !== "number" || alleleFrequency < 0 || alleleFrequency > 1) {
+            console.warn("Invalid allele frequency value:", alleleFrequency);
             alleleFrequency = 0;
         }
 
@@ -86,12 +86,12 @@ export function MapViewer(mv = {}) {
             console.warn("Vector source or features not available");
             return;
         }
-        
+
         if (!gene) {
             console.warn("Gene parameter is required");
             return;
         }
-        
+
         mv.overlay.setPosition(undefined); // Clear tooltips
         mv.alleleVectorSource.clear();
 
@@ -106,7 +106,7 @@ export function MapViewer(mv = {}) {
 
             const longitude = parseFloat(featureData.longitude);
             const latitude = parseFloat(featureData.latitude);
-            
+
             if (isNaN(longitude) || isNaN(latitude)) {
                 console.warn("Invalid coordinates for feature:", featureData);
                 return;
@@ -115,9 +115,9 @@ export function MapViewer(mv = {}) {
             const marker = new Feature({
                 geometry: new Point(fromLonLat([longitude, latitude])),
                 average_allele_frequency: freq,
-                country: featureData.country || 'Unknown',
-                admin_level_1: featureData.admin_level_1 || 'Unknown',
-                gene: featureData.gene || 'Unknown',
+                country: featureData.country || "Unknown",
+                admin_level_1: featureData.admin_level_1 || "Unknown",
+                gene: featureData.gene || "Unknown",
             });
 
             marker.setStyle(
@@ -126,7 +126,7 @@ export function MapViewer(mv = {}) {
                         src: mv.createPieChartIcon(freq),
                         scale: 0.6,
                     }),
-                })
+                }),
             );
 
             mv.alleleVectorSource.addFeature(marker);
@@ -146,7 +146,7 @@ export function MapViewer(mv = {}) {
             const freq = parseFloat(featureData.average_allele_frequency);
             const longitude = parseFloat(featureData.longitude);
             const latitude = parseFloat(featureData.latitude);
-            
+
             if (isNaN(freq) || isNaN(longitude) || isNaN(latitude)) {
                 console.warn("Invalid data for feature:", featureData);
                 return;
@@ -155,9 +155,9 @@ export function MapViewer(mv = {}) {
             const marker = new Feature({
                 geometry: new Point(fromLonLat([longitude, latitude])),
                 average_allele_frequency: freq,
-                country: featureData.country || 'Unknown',
-                admin_level_1: featureData.admin_level_1 || 'Unknown',
-                gene: featureData.gene || 'Unknown',
+                country: featureData.country || "Unknown",
+                admin_level_1: featureData.admin_level_1 || "Unknown",
+                gene: featureData.gene || "Unknown",
             });
 
             marker.setStyle(
@@ -166,7 +166,7 @@ export function MapViewer(mv = {}) {
                         src: mv.createPieChartIcon(freq),
                         scale: 0.6,
                     }),
-                })
+                }),
             );
 
             mv.alleleVectorSource.addFeature(marker);
@@ -189,7 +189,7 @@ export function MapViewer(mv = {}) {
         }
 
         Object.entries(mv.baseLayers).forEach(([name, layer]) => {
-            if (layer && typeof layer.setVisible === 'function') {
+            if (layer && typeof layer.setVisible === "function") {
                 layer.setVisible(name === selectedLayerName);
             }
         });
@@ -203,13 +203,13 @@ export function MapViewer(mv = {}) {
         const overlayElement = document.createElement("div");
         overlayElement.className = "ol-popup";
         overlayElement.style.cssText = "background: white; padding: 6px; border: 1px solid #ccc; border-radius: 4px;";
-        
+
         mv.overlay = new Overlay({
             element: overlayElement,
             offset: [0, -15],
             positioning: "bottom-center",
         });
-        
+
         return mv.overlay;
     };
 
@@ -224,13 +224,13 @@ export function MapViewer(mv = {}) {
 
         mv.gMap.on("pointermove", (evt) => {
             const feature = mv.gMap.forEachFeatureAtPixel(evt.pixel, (f) => f);
-            
+
             if (feature && feature.get("average_allele_frequency") !== undefined) {
                 const freq = feature.get("average_allele_frequency");
-                const country = feature.get("country") || 'Unknown';
-                const admin = feature.get("admin_level_1") || 'Unknown';
-                const gene = feature.get("gene") || 'Unknown';
-                
+                const country = feature.get("country") || "Unknown";
+                const admin = feature.get("admin_level_1") || "Unknown";
+                const gene = feature.get("gene") || "Unknown";
+
                 mv.overlay.getElement().innerHTML = `
                     <div style="text-align: center">
                         <img src="${mv.createPieChartIcon(freq)}" width="40" style="margin: auto;" alt="Allele frequency chart" />
@@ -263,10 +263,10 @@ export function MapViewer(mv = {}) {
         if (mv.alleleVectorSource) {
             mv.alleleVectorSource.clear();
         }
-        
+
         // Load new data
         await mv.loadAlleleData(dataUrl);
-        
+
         // Add all markers with new data
         mv.addAllAlleleMarkers();
     };
@@ -294,7 +294,7 @@ export function MapViewer(mv = {}) {
         try {
             // Store base layers
             mv.baseLayers = baseLayers;
-            
+
             // Create vector source and layer for allele markers
             mv.alleleVectorSource = new Vector();
             mv.alleleVectorLayer = new layer.Vector({ source: mv.alleleVectorSource });
@@ -318,7 +318,7 @@ export function MapViewer(mv = {}) {
 
             // Load allele data
             await mv.loadAlleleData(dataUrl);
-            
+
             // Add all markers initially
             mv.addAllAlleleMarkers();
 
@@ -342,15 +342,14 @@ export function MapViewer(mv = {}) {
      * @param {string} selectedColor - Color for the geometries
      * @returns {Object} Style configuration object
      */
-    mv.setStyle = (selectedColor = '#0000ff') => {
+    mv.setStyle = (selectedColor = "#0000ff") => {
         const commonFill = new style.Fill({
             color: "rgba(0, 0, 255, 0.1)",
         });
 
-        const createStroke = (color = selectedColor, width = 1) => 
-            new style.Stroke({ color, width });
+        const createStroke = (color = selectedColor, width = 1) => new style.Stroke({ color, width });
 
-        const createCircleImage = (radius = 5) => 
+        const createCircleImage = (radius = 5) =>
             new style.Circle({
                 radius,
                 fill: commonFill,
@@ -392,7 +391,7 @@ export function MapViewer(mv = {}) {
                 }),
             }),
         };
-        
+
         return styles;
     };
 
@@ -446,10 +445,10 @@ export function MapViewer(mv = {}) {
         mv.gMap.once("rendercomplete", (event) => {
             const canvas = event.context.canvas;
             const fileName = `map-export-${Date.now()}.png`;
-            
+
             canvas.toBlob((blob) => {
                 if (blob) {
-                    const link = document.createElement('a');
+                    const link = document.createElement("a");
                     link.href = URL.createObjectURL(blob);
                     link.download = fileName;
                     document.body.appendChild(link);
@@ -461,7 +460,7 @@ export function MapViewer(mv = {}) {
                 }
             });
         });
-        
+
         mv.gMap.renderSync();
     };
 
@@ -482,7 +481,7 @@ export function MapViewer(mv = {}) {
         const tile = new layer.Tile({ source: new OSM() });
         const fullScreen = new control.FullScreen();
         const scaleLineControl = new control.ScaleLine();
-        
+
         const vectorLayer = new layer.Vector({
             source: vSource,
             style: styleFunction,
@@ -544,10 +543,10 @@ export function MapViewer(mv = {}) {
         }
 
         if (fileType === "geojson") {
-            const sourceVec = new Vector({ 
-                format: formatType, 
-                url: filePath, 
-                wrapX: false 
+            const sourceVec = new Vector({
+                format: formatType,
+                url: filePath,
+                wrapX: false,
             });
             mv.createMap(sourceVec, geometryColor, geometryType, styleFunction, target);
         } else {

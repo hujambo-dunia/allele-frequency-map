@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import "ol/ol.css";
 import { baseLayer } from "./baseLayer.js";
 import SelectField from "./SelectField.vue";
 import { MapViewer } from "./MapViewer.js";
+import { NSelect } from "naive-ui";
+import TileLayers from "./tileLayers.json";
 
 const BASELAYER_DEFAULT = "OpenStreetMap";
 
@@ -21,6 +23,13 @@ const props = defineProps<Props>();
 const mapContainer = ref<HTMLElement | null>(null);
 const selectedBase = ref<string>(props.settings.map_baselayer || BASELAYER_DEFAULT);
 const features = ref();
+
+const mapBaselayerOptions = computed(() =>
+    Object.entries(TileLayers).map(([x, y]) => ({
+        label: x,
+        value: x,
+    })),
+);
 
 let mapViewer: any;
 
@@ -52,7 +61,7 @@ function _handleBaselayerNoReinitializeMap(newValues, oldValues) {
     // Check if props changed - excluding settings.map_baselayer (mapBaselayer) to avoid double reinitialization)
     const mapBaselayerChanged = newValues.mapBaselayer !== oldValues?.mapBaselayer;
     const selectedBaseChanged = newValues.selectedBase !== oldValues?.selectedBase;
-    
+
     if (mapBaselayerChanged && newValues.mapBaselayer) {
         selectedBase.value = newValues.mapBaselayer;
         mapViewer.switchBaseLayer(newValues.mapBaselayer);
@@ -83,24 +92,18 @@ watch(
             _handleBaselayerNoReinitializeMap(newValues, oldValues);
         }
     },
-    { deep: true }
+    { deep: true },
 );
 </script>
 
 <template>
     <div class="flex flex-row h-screen w-screen">
-        <div 
-            ref="mapContainer" 
-            class="flex-grow w-full h-full relative overflow-visible" 
-        />
+        <div ref="mapContainer" class="flex-grow w-full h-full relative overflow-visible" />
         <div class="absolute top-4 right-4 bg-white p-4 rounded shadow">
             <label class="block font-medium mb-1">Gene</label>
             <div class="text-xs py-1">Filter data by gene</div>
-            <SelectField 
-                v-if="features" 
-                :features="features" 
-                @select="handleGeneSelect" 
-            />
+            <SelectField v-if="features" :features="features" @select="handleGeneSelect" />
+            <n-select v-model:value="selectedBase" :filterable="true" :options="mapBaselayerOptions" />
         </div>
     </div>
 </template>

@@ -10,17 +10,17 @@ Designed for use inside of [Galaxy Project](https://github.com/galaxyproject/gal
 
 ### Utilizes existing infrasctructure dependency (OpenLayers)
 
-* Refers to third-party [map] baselayer library with full citations (OL)
-* Restricts baselayer options to public-use, non-rate limited (XML)
-* Templatizes baselayer drop-down into Settings sidebar (Galaxy-Charts)
-* Preloads all map tiles upon init; user only shows/hides maps (Vue)
-* Adds map markers with tooltips from user dataset (Galaxy, MapViewer)
+- Refers to third-party [map] baselayer library with full citations (OL)
+- Restricts baselayer options to public-use, non-rate limited (XML)
+- Templatizes baselayer drop-down into Settings sidebar (Galaxy-Charts)
+- Preloads all map tiles upon init; user only shows/hides maps (Vue)
+- Adds map markers with tooltips from user dataset (Galaxy, MapViewer)
 
 ### Extends existing framework for custom functionality (Galaxy-Charts)
 
-* Adds custom floating auto-complete drop-down field (Vue)
-* Componentizes select field for better code separation (Vue)
-* Populates select field options from user dataset (Galaxy)
-* Allows user to filter map markers by Gene Name (OL, JS)
+- Adds custom floating auto-complete drop-down field (Vue)
+- Componentizes select field for better code separation (Vue)
+- Populates select field options from user dataset (Galaxy)
+- Allows user to filter map markers by Gene Name (OL, JS)
 
 Designed for [#472](https://github.com/galaxyproject/brc-analytics/issues/472)

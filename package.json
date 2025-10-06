@@ -10,7 +10,7 @@
         "dev": "vite",
         "build": "vite build",
         "preview": "vite preview",
-        "prettier": "prettier --config ./prettier.config.js --write 'package.json' '**/*.{js,jsx,ts,tsx,json,css,md,vue}'",
+        "prettier": "prettier --config ./prettier.config.js --write './*.{js,ts,json}' 'src/**/*.{js,ts,json,css,vue}'",
         "test": "vitest",
         "test:watch": "vitest --watch",
         "test:ui": "vitest --ui"
@@ -24,6 +24,7 @@
         "galaxy-charts": "^0.0.83",
         "galaxy-charts-xml-parser": "^1.0.3",
         "jsdom": "^25.0.1",
+        "naive-ui": "2.40.3",
         "postcss": "^8.4.40",
         "prettier": "^3.3.3",
         "tailwindcss": "^3.4.7",

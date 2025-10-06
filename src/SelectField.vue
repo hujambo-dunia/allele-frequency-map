@@ -1,6 +1,11 @@
 <template>
     <span class="selectField">
-        <input type="text" v-model="searchTerm" placeholder="Search gene..." class="px-2 py-1 border" @input="filterGenes" />
+        <input
+            type="text"
+            v-model="searchTerm"
+            placeholder="Search gene..."
+            class="px-2 py-1 border"
+            @input="filterGenes" />
         <ul v-if="filteredGenes.length && searchTerm">
             <li v-for="gene in filteredGenes" :key="gene" @click="selectGene(gene)" style="cursor: pointer">
                 {{ gene }}
@@ -17,7 +22,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'select', gene: string): void;
+    (e: "select", gene: string): void;
 }>();
 
 const searchTerm = ref("");
@@ -34,7 +39,7 @@ function selectGene(gene) {
     selectedGene.value = gene;
     searchTerm.value = gene;
     filteredGenes.value = [];
-    emit('select', gene);
+    emit("select", gene);
 }
 </script>
 
