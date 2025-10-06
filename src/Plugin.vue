@@ -24,12 +24,6 @@ const features = ref();
 
 let mapViewer: any;
 
-function switchBaseLayer(): void {
-    if (mapViewer) {
-        mapViewer.switchBaseLayer(selectedBase.value);
-    }
-}
-
 function handleGeneSelect(gene: string): void {
     if (mapViewer) {
         mapViewer.filterByGene(gene);
