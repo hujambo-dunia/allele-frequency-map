@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { MapViewer } from "./MapViewer.js";
 import { NSelect } from "naive-ui";
 import BaseLayers from "./baseLayers.json";
@@ -27,37 +27,30 @@ const selectedGene = ref();
 const selectedLayer = ref<string>(props.settings?.map_baselayer || DEFAULT_LAYER);
 
 const geneOptions = ref([]);
-const layerOptions = computed(() => Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
+const layerOptions = ref(Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
 
 let mapViewer: any;
 
 async function initializeMap(): Promise<void> {
     const dataUrl = props.datasetUrl || TEST_DATASET;
-    if (!mapContainer.value) {
-        console.warn("Map container is not available");
-        return;
-    }
-
-    if (!dataUrl) {
-        console.error("Data URL is required");
-        return [];
-    }
-
-    try {
-        const { data: featureData } = await axios.get(dataUrl);
+    if (mapContainer.value) {
         try {
-            mapViewer = new MapViewer({});
-            await mapViewer.initAlleleMap(mapContainer.value, featureData);
-            mapViewer.switchBaseLayer(selectedLayer.value);
-            geneOptions.value = [...new Set(featureData.map((f) => f.gene))]
-                .sort()
-                .map((g) => ({ label: g, value: g }));
+            const { data: featureData } = await axios.get(dataUrl);
+            try {
+                mapViewer = new MapViewer({});
+                await mapViewer.initAlleleMap(mapContainer.value, featureData);
+                mapViewer.switchBaseLayer(selectedLayer.value);
+                geneOptions.value = [...new Set(featureData.map((f) => f.gene))]
+                    .sort()
+                    .map((g) => ({ label: g, value: g }));
+            } catch (error) {
+                console.error("Failed to initialize map:", error);
+            }
         } catch (error) {
-            console.error("Failed to initialize map:", error);
+            console.error("Failed to load allele data:", error);
         }
-    } catch (error) {
-        console.error("Failed to load allele data:", error);
-        return [];
+    } else {
+        console.error("Map container is not available");
     }
 }
 
