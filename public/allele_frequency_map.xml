@@ -10,24 +10,24 @@
         <param required="true">dataset_id</param>
     </params>
     <entry_point entry_point_type="script" src="index.js" css="index.css" />
-    <settings>
-        <input>
-            <label>Map Baselayer</label>
-            <name>map_baselayer</name>
-            <help>Select a base layer for the map.</help>
-            <type>select</type>
-            <display>radio</display>
-            <value>OpenStreetMap</value>
-            <data>
-                <data>
-                    <label>OpenStreetMap</label>
-                    <value>OpenStreetMap</value>
-                </data>
-                <data>
-                    <label>Carto Light (printer-friendly)</label>
-                    <value>Carto Light</value>
-                </data>
-            </data>
-        </input>
-    </settings>
+    <tests>
+        <test>
+            <param name="dataset_id" value="http://cdn.jsdelivr.net/gh/galaxyproject/galaxy-test-data/1.allele_freq.json" ftype="allele_freq.json"/>
+        </test>
+    </tests>
+    <help format="markdown"><![CDATA[
+# What is Allele Frequency Map?
+
+Allele Frequency Map Visualization provides an interactive way to explore the geographic distribution of genetic variants (alleles) across populations. By visualizing allele frequencies on a map, users can identify patterns of natural selection, population structure, or migration. This tool is useful for studying the spread of resistance alleles in pathogens, guiding research in public health, agriculture, and evolutionary biology.
+
+Designed for use within [Galaxy Project](https://github.com/galaxyproject/galaxy) via the [Galaxy-Charts](https://charts.galaxyproject.org) framework.
+
+## Key Features
+
+- **Map Explorer**: Navigate through geographic regions with zoom, pan, and selectable baselayers.
+- **Allele Visualization**: Display allele frequencies as map markers with informative tooltips.
+- **Interactive Filtering**: Filter markers by gene name or other dataset attributes.
+
+Designed for [https://github.com/galaxyproject/brc-analytics](https://github.com/galaxyproject/brc-analytics).
+    ]]></help>
 </visualization>
