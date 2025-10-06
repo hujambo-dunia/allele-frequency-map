@@ -3,11 +3,10 @@ import { computed, ref, onMounted, watch } from "vue";
 import { MapViewer } from "./MapViewer.js";
 import { NSelect } from "naive-ui";
 import BaseLayers from "./baseLayers.json";
-import SelectField from "./SelectField.vue";
 
 import "ol/ol.css";
 
-const BASELAYER_DEFAULT = "OpenStreetMap";
+const DEFAULT_LAYER = "OpenStreetMap";
 const TEST_DATASET = "1.json";
 
 interface Props {
@@ -23,13 +22,14 @@ const props = defineProps<Props>();
 
 const mapContainer = ref<HTMLElement | null>(null);
 
-const selectedBase = ref<string>(props.settings?.map_baselayer || BASELAYER_DEFAULT);
-const selectedFeature = ref();
+const selectedLayer = ref<string>(props.settings?.map_baselayer || DEFAULT_LAYER);
+const selectedGene = ref();
+const features = ref([]);
 
-const features = ref();
-
-const featuresOptions = computed(() => features.value.map((x, i) => ({ label: x.gene, value: i })));
-const baseLayerOptions = computed(() => Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
+const geneOptions = computed(() =>
+    [...new Set(features.value.map((f) => f.gene))].sort().map((g) => ({ label: g, value: g })),
+);
+const layerOptions = computed(() => Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
 
 let mapViewer: any;
 
@@ -42,7 +42,7 @@ async function initializeMap(): Promise<void> {
     try {
         mapViewer = new MapViewer({});
         await mapViewer.initAlleleMap(mapContainer.value, dataUrl);
-        mapViewer.switchBaseLayer(selectedBase.value);
+        mapViewer.switchBaseLayer(selectedLayer.value);
         features.value = mapViewer.features;
     } catch (error) {
         console.error("Failed to initialize map:", error);
@@ -61,13 +61,13 @@ watch(
     { deep: true },
 );
 
-watch(selectedBase, (newValue) => {
+watch(selectedLayer, (newValue) => {
     if (mapViewer) {
         mapViewer.switchBaseLayer(newValue);
     }
 });
 
-watch(selectedFeature, (newValue) => {
+watch(selectedGene, (newValue) => {
     if (mapViewer) {
         mapViewer.filterByGene(newValue);
     }
@@ -81,12 +81,12 @@ watch(selectedFeature, (newValue) => {
             <div v-if="features" class="mb-3">
                 <div class="font-medium mb-1">Gene</div>
                 <div class="text-xs mb-1">Filter data by gene.</div>
-                <n-select v-model:value="selectedFeature" :filterable="true" :options="featuresOptions" />
+                <n-select v-model:value="selectedGene" :filterable="true" :options="geneOptions" />
             </div>
             <div>
                 <div class="font-medium mb-1">Tile Layer</div>
                 <div class="text-xs mb-1">Select a tile layer.</div>
-                <n-select v-model:value="selectedBase" :filterable="true" :options="baseLayerOptions" />
+                <n-select v-model:value="selectedLayer" :filterable="true" :options="layerOptions" />
             </div>
         </div>
     </div>
