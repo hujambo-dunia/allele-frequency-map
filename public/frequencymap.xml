@@ -4,6 +4,7 @@
         <data_source>
             <model_class>HistoryDatasetAssociation</model_class>
             <test test_attr="ext">json</test>
+            <test test_attr="ext">freq.geojson</test>
         </data_source>
     </data_sources>
     <params>
@@ -12,7 +13,7 @@
     <entry_point entry_point_type="script" src="index.js" css="index.css" />
     <tests>
         <test>
-            <param name="dataset_id" value="http://cdn.jsdelivr.net/gh/galaxyproject/galaxy-test-data/1.allele_freq.json" ftype="allele_freq.json"/>
+            <param name="dataset_id" value="http://cdn.jsdelivr.net/gh/galaxyproject/galaxy-test-data/1.freq.geojson" ftype="freq.geojson"/>
         </test>
     </tests>
     <help format="markdown"><![CDATA[
