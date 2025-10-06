@@ -1,23 +1,21 @@
 import { createApp, h } from "vue";
-import App from "./App.vue";
+import App from "./Plugin.vue";
 import "./style.css";
 
 async function main() {
     try {
         const scriptUrl = new URL(import.meta.url);
         const container = scriptUrl.searchParams.get("container") || "app";
+        const appElement = document.getElementById(container);
 
         if (import.meta.env.DEV) {
-            const { parseXML } = await import("galaxy-charts-xml-parser");
             const dataIncoming = {
+                root: "/",
                 visualization_config: {
-                    dataset_id: process.env.dataset_id || "unavailable",
+                    dataset_id: process.env.dataset_id,
                     settings: {},
                 },
-                visualization_plugin: await parseXML("allele_frequency_map.xml"),
             };
-            const appElement = document.getElementById(container);
-            
             if (appElement) {
                 appElement.dataset.incoming = JSON.stringify(dataIncoming);
             } else {
@@ -25,11 +23,14 @@ async function main() {
             }
         }
 
+        const { root, visualization_config } = JSON.parse(appElement.dataset.incoming);
         createApp({
-            render: () => h(App, { 
-                container: container, 
-                credentials: process.env.credentials 
-            }),
+            render: () =>
+                h(App, {
+                    root: root,
+                    datasetId: visualization_config.dataset_id,
+                    settings: visualization_config.settings,
+                }),
         }).mount(`#${container}`);
     } catch (error) {
         console.error("Failed to initialize application:", error);

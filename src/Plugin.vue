@@ -1,112 +1,97 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
-import "ol/ol.css";
-import { baseLayer } from "./baseLayer.js";
-import SelectField from "./SelectField.vue";
 import { MapViewer } from "./MapViewer.js";
+import { NSelect } from "naive-ui";
+import BaseLayers from "./baseLayers.json";
+import axios from "axios";
 
-const BASELAYER_DEFAULT = "OpenStreetMap";
+import "ol/ol.css";
+
+const DEFAULT_LAYER = "OpenStreetMap";
+const TEST_DATASET = "1.json";
 
 interface Props {
     datasetId: string;
-    datasetUrl?: string;
     root?: string;
-    settings: Record<string, unknown>;
-    specs?: unknown;
-    tracks?: unknown;
+    settings?: {
+        map_baselayer: string;
+    };
 }
 
 const props = defineProps<Props>();
 
 const mapContainer = ref<HTMLElement | null>(null);
-const selectedBase = ref<string>(props.settings?.map_baselayer as string || BASELAYER_DEFAULT);
-const features = ref();
+
+const selectedGene = ref();
+const selectedLayer = ref<string>(props.settings?.map_baselayer || DEFAULT_LAYER);
+
+const geneOptions = ref([]);
+const layerOptions = ref(Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
 
 let mapViewer: any;
 
-function switchBaseLayer(): void {
-    if (mapViewer) {
-        mapViewer.switchBaseLayer(selectedBase.value);
-    }
-}
-
-function handleGeneSelect(gene: string): void {
-    if (mapViewer) {
-        mapViewer.filterByGene(gene);
-    }
-}
-
-async function _initializeMap(): Promise<void> {
-    const dataUrl = "1.json"; /* Use datasetUrl if provided, otherwise fall back to default */
-
-    if (!mapContainer.value) {
-        console.warn("Map container is not available");
-        return;
-    }
-
-    try {
-        mapViewer = new MapViewer({});
-        await mapViewer.initAlleleMap(mapContainer.value, baseLayer, dataUrl);
-        mapViewer.switchBaseLayer(selectedBase.value);
-        features.value = mapViewer.features;
-    } catch (error) {
-        console.error("Failed to initialize map:", error);
-    }
-}
-
-function _handleBaselayerNoReinitializeMap(newValues, oldValues) {
-    // Check if props changed - excluding settings.map_baselayer (mapBaselayer) to avoid double reinitialization)
-    const mapBaselayerChanged = newValues.mapBaselayer !== oldValues?.mapBaselayer;
-    const selectedBaseChanged = newValues.selectedBase !== oldValues?.selectedBase;
-    
-    if (mapBaselayerChanged && newValues.mapBaselayer) {
-        selectedBase.value = newValues.mapBaselayer;
-        mapViewer.switchBaseLayer(newValues.mapBaselayer);
-    } else if (selectedBaseChanged && !mapBaselayerChanged) {
-        mapViewer.switchBaseLayer(newValues.selectedBase);
+async function initializeMap(): Promise<void> {
+    const dataUrl = props.datasetId ? `${props.root}api/datasets/${props.datasetId}/display` : TEST_DATASET;
+    if (mapContainer.value) {
+        try {
+            const { data: featureData } = await axios.get(dataUrl);
+            try {
+                mapViewer = new MapViewer({});
+                await mapViewer.initAlleleMap(mapContainer.value, featureData);
+                mapViewer.switchBaseLayer(selectedLayer.value);
+                geneOptions.value = [...new Set(featureData.map((f) => f.gene))]
+                    .sort()
+                    .map((g) => ({ label: g, value: g }));
+            } catch (error) {
+                console.error("Failed to initialize map:", error);
+            }
+        } catch (error) {
+            console.error("Failed to load allele data:", error);
+        }
+    } else {
+        console.error("Map container is not available");
     }
 }
 
 onMounted(() => {
-    _initializeMap();
+    initializeMap();
 });
 
 watch(
-    () => ({
-        props: props,
-        selectedBase: selectedBase.value,
-        mapBaselayer: props.settings?.map_baselayer as string,
-    }),
-    (newValues, oldValues) => {
-        const propsChanged = newValues.props !== oldValues?.props;
-
-        if (propsChanged) {
-            _initializeMap();
-            return;
-        }
-
-        if (mapViewer) {
-            _handleBaselayerNoReinitializeMap(newValues, oldValues);
-        }
+    () => props,
+    () => {
+        initializeMap();
     },
-    { deep: true }
+    { deep: true },
 );
+
+watch(selectedLayer, (newValue) => {
+    if (mapViewer) {
+        mapViewer.switchBaseLayer(newValue);
+    }
+});
+
+watch(selectedGene, (newValue) => {
+    if (mapViewer) {
+        mapViewer.filterByGene(newValue);
+    }
+});
 </script>
 
 <template>
     <div class="flex flex-row h-screen w-screen">
-        <div 
-            ref="mapContainer" 
-            class="flex-grow w-full h-full relative overflow-visible" 
-        />
+        <div ref="mapContainer" class="flex-grow w-full h-full relative overflow-visible" />
         <div class="absolute top-4 right-4 bg-white p-4 rounded shadow">
-            <label class="block font-medium mb-1">Gene</label>
-            <div class="text-xs py-1">Filter data by gene</div>
-            <SelectField 
-                v-if="features" 
-                :features="features" 
-                @select="handleGeneSelect" 
-            />
+            <div v-if="geneOptions.length > 0" class="mb-3">
+                <div class="font-medium mb-1">Gene</div>
+                <div class="text-xs mb-1">Filter data by gene.</div>
+                <n-select v-model:value="selectedGene" :filterable="true" :options="geneOptions" />
+            </div>
+            <div>
+                <div class="font-medium mb-1">Tile Layer</div>
+                <div class="text-xs mb-1">Select a tile layer.</div>
+                <n-select v-model:value="selectedLayer" :filterable="true" :options="layerOptions" />
+            </div>
         </div>
     </div>
 </template>
