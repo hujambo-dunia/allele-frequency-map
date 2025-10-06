@@ -11,15 +11,15 @@ interface Props {
     datasetId: string;
     datasetUrl?: string;
     root?: string;
-    settings: Record<string, unknown>;
-    specs?: unknown;
-    tracks?: unknown;
+    settings: {
+        map_baselayer: string;
+    };
 }
 
 const props = defineProps<Props>();
 
 const mapContainer = ref<HTMLElement | null>(null);
-const selectedBase = ref<string>(props.settings?.map_baselayer as string || BASELAYER_DEFAULT);
+const selectedBase = ref<string>(props.settings.map_baselayer || BASELAYER_DEFAULT);
 const features = ref();
 
 let mapViewer: any;
@@ -75,7 +75,7 @@ watch(
     () => ({
         props: props,
         selectedBase: selectedBase.value,
-        mapBaselayer: props.settings?.map_baselayer as string,
+        mapBaselayer: props.settings.map_baselayer,
     }),
     (newValues, oldValues) => {
         const propsChanged = newValues.props !== oldValues?.props;
