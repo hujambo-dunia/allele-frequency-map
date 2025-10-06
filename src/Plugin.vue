@@ -13,7 +13,7 @@ interface Props {
     datasetId: string;
     datasetUrl?: string;
     root?: string;
-    settings: {
+    settings?: {
         map_baselayer: string;
     };
 }
@@ -21,7 +21,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const mapContainer = ref<HTMLElement | null>(null);
-const selectedBase = ref<string>(props.settings.map_baselayer || BASELAYER_DEFAULT);
+const selectedBase = ref<string>(props.settings?.map_baselayer || BASELAYER_DEFAULT);
 const features = ref();
 
 const mapBaselayerOptions = computed(() =>
@@ -78,7 +78,7 @@ watch(
     () => ({
         props: props,
         selectedBase: selectedBase.value,
-        mapBaselayer: props.settings.map_baselayer,
+        mapBaselayer: props.settings?.map_baselayer,
     }),
     (newValues, oldValues) => {
         const propsChanged = newValues.props !== oldValues?.props;
