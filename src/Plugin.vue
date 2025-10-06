@@ -8,7 +8,7 @@ import axios from "axios";
 import "ol/ol.css";
 
 const DEFAULT_LAYER = "OpenStreetMap";
-const TEST_DATASET = "1.json";
+const TEST_DATASET = "1.freq.geojson";
 
 interface Props {
     datasetId: string;
