@@ -1,5 +1,5 @@
 import { Map, View, Graticule } from "ol";
-import { OSM, Vector } from "ol/source";
+import { OSM, Vector, XYZ } from "ol/source";
 import { GeoJSON } from "ol/format";
 import * as interaction from "ol/interaction";
 import * as style from "ol/style";
@@ -10,7 +10,9 @@ import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
 import { Style, Icon } from "ol/style";
 import Overlay from "ol/Overlay";
+import TileLayer from "ol/layer/Tile";
 import axios from "axios";
+import BaseLayers from "./baseLayers.json";
 
 /**
  * MapViewer class for creating and managing OpenLayers maps with allele frequency visualization
@@ -24,7 +26,6 @@ export function MapViewer(mv = {}) {
     mv.alleleVectorLayer = null;
     mv.overlay = null;
     mv.features = null;
-    mv.baseLayers = {};
 
     /**
      * Create pie chart icon for allele frequency visualization
@@ -183,16 +184,28 @@ export function MapViewer(mv = {}) {
             return;
         }
 
-        if (!mv.baseLayers || Object.keys(mv.baseLayers).length === 0) {
-            console.warn("No base layers available");
-            return;
-        }
+        const getLayer = BaseLayers[selectedLayerName];
 
-        Object.entries(mv.baseLayers).forEach(([name, layer]) => {
-            if (layer && typeof layer.setVisible === "function") {
-                layer.setVisible(name === selectedLayerName);
-            }
-        });
+        let layerConfig = null;
+        if (getLayer.type === "XYZ") {
+            layerConfig = {
+                source: new XYZ({
+                    attributions: getLayer.attributions,
+                    url: getLayer.url,
+                    maxZoom: 19,
+                    tilePixelRatio: 1,
+                    preload: "Infinity",
+                    opacity: 1,
+                }),
+            };
+        } else {
+            layerConfig = {
+                source: new OSM(),
+                visible: true,
+            };
+        }
+        const newLayer = new TileLayer(layerConfig);
+        mv.gMap.getLayers().setAt(0, newLayer);
     };
 
     /**
@@ -274,17 +287,12 @@ export function MapViewer(mv = {}) {
     /**
      * Initialize allele frequency map
      * @param {HTMLElement} target - Target DOM element for the map
-     * @param {Object} baseLayers - Base layer configuration
      * @param {string} dataUrl - URL to the data file
      * @returns {Promise<Map>} OpenLayers Map instance
      */
-    mv.initAlleleMap = async (target, baseLayers, dataUrl) => {
+    mv.initAlleleMap = async (target, dataUrl) => {
         if (!target) {
             throw new Error("Target element is required");
-        }
-
-        if (!baseLayers || Object.keys(baseLayers).length === 0) {
-            throw new Error("Base layers are required");
         }
 
         if (!dataUrl) {
@@ -292,9 +300,6 @@ export function MapViewer(mv = {}) {
         }
 
         try {
-            // Store base layers
-            mv.baseLayers = baseLayers;
-
             // Create vector source and layer for allele markers
             mv.alleleVectorSource = new Vector();
             mv.alleleVectorLayer = new layer.Vector({ source: mv.alleleVectorSource });
@@ -303,12 +308,15 @@ export function MapViewer(mv = {}) {
             mv.setupOverlay();
 
             // Create base layer array
-            const baseLayerArray = Object.values(baseLayers);
+            const newLayer = new TileLayer({
+                source: new OSM(),
+                visible: true,
+            });
 
             // Create map
             mv.gMap = new Map({
                 target: target,
-                layers: [...baseLayerArray, mv.alleleVectorLayer],
+                layers: [newLayer, mv.alleleVectorLayer],
                 view: new View({
                     center: fromLonLat([0, 0]),
                     zoom: 2,

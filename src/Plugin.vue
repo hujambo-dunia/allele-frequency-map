@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from "vue";
 import "ol/ol.css";
-import { baseLayer } from "./baseLayer.js";
 import SelectField from "./SelectField.vue";
 import { MapViewer } from "./MapViewer.js";
 import { NSelect } from "naive-ui";
-import TileLayers from "./tileLayers.json";
+import BaseLayers from "./baseLayers.json";
 
 const BASELAYER_DEFAULT = "OpenStreetMap";
 
@@ -25,7 +24,7 @@ const selectedBase = ref<string>(props.settings?.map_baselayer || BASELAYER_DEFA
 const features = ref();
 
 const mapBaselayerOptions = computed(() =>
-    Object.entries(TileLayers).map(([x, y]) => ({
+    Object.entries(BaseLayers).map(([x, y]) => ({
         label: x,
         value: x,
     })),
@@ -49,7 +48,7 @@ async function _initializeMap(): Promise<void> {
 
     try {
         mapViewer = new MapViewer({});
-        await mapViewer.initAlleleMap(mapContainer.value, baseLayer, dataUrl);
+        await mapViewer.initAlleleMap(mapContainer.value, dataUrl);
         mapViewer.switchBaseLayer(selectedBase.value);
         features.value = mapViewer.features;
     } catch (error) {
@@ -103,7 +102,7 @@ watch(
             <div v-if="features" class="mb-3">
                 <div class="font-medium mb-1">Gene</div>
                 <div class="text-xs mb-1">Filter data by gene.</div>
-                <SelectField  :features="features" @select="handleGeneSelect" />
+                <SelectField :features="features" @select="handleGeneSelect" />
             </div>
             <div>
                 <div class="font-medium mb-1">Tile Layer</div>
