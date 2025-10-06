@@ -11,7 +11,6 @@ import Point from "ol/geom/Point";
 import { Style, Icon } from "ol/style";
 import Overlay from "ol/Overlay";
 import TileLayer from "ol/layer/Tile";
-import axios from "axios";
 import BaseLayers from "./baseLayers.json";
 
 /**
@@ -55,27 +54,6 @@ export function MapViewer(mv = {}) {
             </svg>
         `;
         return `data:image/svg+xml;base64,${btoa(svg)}`;
-    };
-
-    /**
-     * Load allele frequency data from JSON file
-     * @param {string} dataUrl - URL to the JSON data file
-     * @returns {Promise<Array>} Array of feature data
-     */
-    mv.loadAlleleData = async (dataUrl) => {
-        if (!dataUrl) {
-            console.error("Data URL is required");
-            return [];
-        }
-
-        try {
-            const { data: featureData } = await axios.get(dataUrl);
-            mv.features = featureData;
-            return featureData;
-        } catch (error) {
-            console.error("Failed to load allele data:", error);
-            return [];
-        }
     };
 
     /**
@@ -268,13 +246,9 @@ export function MapViewer(mv = {}) {
      * @param {string} dataUrl - URL to the data file
      * @returns {Promise<Map>} OpenLayers Map instance
      */
-    mv.initAlleleMap = async (target, dataUrl) => {
+    mv.initAlleleMap = async (target, featureData) => {
         if (!target) {
             throw new Error("Target element is required");
-        }
-
-        if (!dataUrl) {
-            throw new Error("Data URL is required");
         }
 
         try {
@@ -303,7 +277,7 @@ export function MapViewer(mv = {}) {
             });
 
             // Load allele data
-            await mv.loadAlleleData(dataUrl);
+            mv.features = featureData;
 
             // Add all markers initially
             mv.addAllAlleleMarkers();

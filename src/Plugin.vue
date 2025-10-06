@@ -3,6 +3,7 @@ import { computed, ref, onMounted, watch } from "vue";
 import { MapViewer } from "./MapViewer.js";
 import { NSelect } from "naive-ui";
 import BaseLayers from "./baseLayers.json";
+import axios from "axios";
 
 import "ol/ol.css";
 
@@ -22,13 +23,10 @@ const props = defineProps<Props>();
 
 const mapContainer = ref<HTMLElement | null>(null);
 
-const selectedLayer = ref<string>(props.settings?.map_baselayer || DEFAULT_LAYER);
 const selectedGene = ref();
-const features = ref([]);
+const selectedLayer = ref<string>(props.settings?.map_baselayer || DEFAULT_LAYER);
 
-const geneOptions = computed(() =>
-    [...new Set(features.value.map((f) => f.gene))].sort().map((g) => ({ label: g, value: g })),
-);
+const geneOptions = ref([]);
 const layerOptions = computed(() => Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
 
 let mapViewer: any;
@@ -39,13 +37,27 @@ async function initializeMap(): Promise<void> {
         console.warn("Map container is not available");
         return;
     }
+
+    if (!dataUrl) {
+        console.error("Data URL is required");
+        return [];
+    }
+
     try {
-        mapViewer = new MapViewer({});
-        await mapViewer.initAlleleMap(mapContainer.value, dataUrl);
-        mapViewer.switchBaseLayer(selectedLayer.value);
-        features.value = mapViewer.features;
+        const { data: featureData } = await axios.get(dataUrl);
+        try {
+            mapViewer = new MapViewer({});
+            await mapViewer.initAlleleMap(mapContainer.value, featureData);
+            mapViewer.switchBaseLayer(selectedLayer.value);
+            geneOptions.value = [...new Set(featureData.map((f) => f.gene))]
+                .sort()
+                .map((g) => ({ label: g, value: g }));
+        } catch (error) {
+            console.error("Failed to initialize map:", error);
+        }
     } catch (error) {
-        console.error("Failed to initialize map:", error);
+        console.error("Failed to load allele data:", error);
+        return [];
     }
 }
 
@@ -78,7 +90,7 @@ watch(selectedGene, (newValue) => {
     <div class="flex flex-row h-screen w-screen">
         <div ref="mapContainer" class="flex-grow w-full h-full relative overflow-visible" />
         <div class="absolute top-4 right-4 bg-white p-4 rounded shadow">
-            <div v-if="features" class="mb-3">
+            <div v-if="geneOptions.length > 0" class="mb-3">
                 <div class="font-medium mb-1">Gene</div>
                 <div class="text-xs mb-1">Filter data by gene.</div>
                 <n-select v-model:value="selectedGene" :filterable="true" :options="geneOptions" />
