@@ -263,28 +263,6 @@ export function MapViewer(mv = {}) {
     };
 
     /**
-     * Update data source and refresh markers
-     * @param {string} dataUrl - URL to the new data file
-     */
-    mv.updateDataSource = async (dataUrl) => {
-        if (!dataUrl) {
-            console.error("Data URL is required");
-            return;
-        }
-
-        // Clear existing markers
-        if (mv.alleleVectorSource) {
-            mv.alleleVectorSource.clear();
-        }
-
-        // Load new data
-        await mv.loadAlleleData(dataUrl);
-
-        // Add all markers with new data
-        mv.addAllAlleleMarkers();
-    };
-
-    /**
      * Initialize allele frequency map
      * @param {HTMLElement} target - Target DOM element for the map
      * @param {string} dataUrl - URL to the data file

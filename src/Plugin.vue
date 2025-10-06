@@ -22,16 +22,16 @@ interface Props {
 const props = defineProps<Props>();
 
 const mapContainer = ref<HTMLElement | null>(null);
+
 const selectedBase = ref<string>(props.settings?.map_baselayer || BASELAYER_DEFAULT);
+const selectedFeature = ref();
+
 const features = ref();
 
-const mapBaselayerOptions = computed(() => Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
+const featuresOptions = computed(() => features.value.map((x, i) => ({ label: x.gene, value: i })));
+const baseLayerOptions = computed(() => Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
 
 let mapViewer: any;
-
-function handleGeneSelect(gene: string): void {
-    mapViewer?.filterByGene(gene);
-}
 
 async function initializeMap(): Promise<void> {
     const dataUrl = props.datasetUrl || TEST_DATASET;
@@ -66,6 +66,12 @@ watch(selectedBase, (newValue) => {
         mapViewer.switchBaseLayer(newValue);
     }
 });
+
+watch(selectedFeature, (newValue) => {
+    if (mapViewer) {
+        mapViewer.filterByGene(newValue);
+    }
+});
 </script>
 
 <template>
@@ -75,12 +81,12 @@ watch(selectedBase, (newValue) => {
             <div v-if="features" class="mb-3">
                 <div class="font-medium mb-1">Gene</div>
                 <div class="text-xs mb-1">Filter data by gene.</div>
-                <SelectField :features="features" @select="handleGeneSelect" />
+                <n-select v-model:value="selectedFeature" :filterable="true" :options="featuresOptions" />
             </div>
             <div>
                 <div class="font-medium mb-1">Tile Layer</div>
                 <div class="text-xs mb-1">Select a tile layer.</div>
-                <n-select v-model:value="selectedBase" :filterable="true" :options="mapBaselayerOptions" />
+                <n-select v-model:value="selectedBase" :filterable="true" :options="baseLayerOptions" />
             </div>
         </div>
     </div>
