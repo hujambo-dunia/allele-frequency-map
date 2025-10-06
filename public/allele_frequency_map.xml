@@ -20,8 +20,6 @@
 
 Allele Frequency Map Visualization provides an interactive way to explore the geographic distribution of genetic variants (alleles) across populations. By visualizing allele frequencies on a map, users can identify patterns of natural selection, population structure, or migration. This tool is useful for studying the spread of resistance alleles in pathogens, guiding research in public health, agriculture, and evolutionary biology.
 
-Designed for use within [Galaxy Project](https://github.com/galaxyproject/galaxy) via the [Galaxy-Charts](https://charts.galaxyproject.org) framework.
-
 ## Key Features
 
 - **Map Explorer**: Navigate through geographic regions with zoom, pan, and selectable baselayers.
