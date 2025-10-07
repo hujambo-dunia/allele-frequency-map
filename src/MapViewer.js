@@ -14,33 +14,33 @@ import TileLayer from "ol/layer/Tile";
 import BaseLayers from "./baseLayers.json";
 
 /**
- * MapViewer class for creating and managing OpenLayers maps with allele frequency visualization
+ * MapViewer class for creating and managing OpenLayers maps with frequency visualization
  * @param {Object} mv - MapViewer instance object
  * @returns {Object} Enhanced MapViewer instance
  */
 export function MapViewer(mv = {}) {
     // Initialize properties
     mv.gMap = null;
-    mv.alleleVectorSource = null;
-    mv.alleleVectorLayer = null;
+    mv.VectorSource = null;
+    mv.VectorLayer = null;
     mv.overlay = null;
     mv.features = null;
     mv.currentBaseLayer = null;
 
     /**
-     * Create pie chart icon for allele frequency visualization
-     * @param {number} alleleFrequency - Allele frequency value (0-1)
+     * Create pie chart icon for frequency visualization
+     * @param {number} Frequency - frequency value (0-1)
      * @returns {string} Base64 encoded SVG data URI
      */
-    mv.createPieChartIcon = (alleleFrequency) => {
-        if (typeof alleleFrequency !== "number" || alleleFrequency < 0 || alleleFrequency > 1) {
-            console.warn("Invalid allele frequency value:", alleleFrequency);
-            alleleFrequency = 0;
+    mv.createPieChartIcon = (Frequency) => {
+        if (typeof Frequency !== "number" || Frequency < 0 || Frequency > 1) {
+            console.warn("Invalid frequency value:", Frequency);
+            Frequency = 0;
         }
 
         const size = 40;
         const radius = size / 2;
-        const redAngle = alleleFrequency * 360;
+        const redAngle = Frequency * 360;
 
         const x = radius + radius * Math.sin((redAngle * Math.PI) / 180);
         const y = radius - radius * Math.cos((redAngle * Math.PI) / 180);
@@ -49,7 +49,7 @@ export function MapViewer(mv = {}) {
             <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
                 <circle r="${radius}" cx="${radius}" cy="${radius}" fill="#452701" />
                 <path d="M${radius},${radius} L${radius},0
-                       A${radius},${radius} 0 ${alleleFrequency > 0.5 ? 1 : 0},1
+                       A${radius},${radius} 0 ${Frequency > 0.5 ? 1 : 0},1
                        ${x},${y} Z"
                       fill="#ff6600"/>
             </svg>
@@ -62,7 +62,7 @@ export function MapViewer(mv = {}) {
      * @param {string} gene - Gene name to filter by
      */
     mv.filterByGene = (gene) => {
-        if (!mv.alleleVectorSource || !mv.features) {
+        if (!mv.VectorSource || !mv.features) {
             console.warn("Vector source or features not available");
             return;
         }
@@ -73,12 +73,12 @@ export function MapViewer(mv = {}) {
         }
 
         mv.overlay.setPosition(undefined); // Clear tooltips
-        mv.alleleVectorSource.clear();
+        mv.VectorSource.clear();
 
         const filtered = mv.features.filter((f) => f.gene === gene);
 
         filtered.forEach((featureData) => {
-            const freq = parseFloat(featureData.average_allele_frequency);
+            const freq = parseFloat(featureData.frequency);
             if (isNaN(freq)) {
                 console.warn("Invalid frequency data for feature:", featureData);
                 return;
@@ -94,7 +94,7 @@ export function MapViewer(mv = {}) {
 
             const marker = new Feature({
                 geometry: new Point(fromLonLat([longitude, latitude])),
-                average_allele_frequency: freq,
+                frequency: freq,
                 country: featureData.country || "Unknown",
                 admin_level_1: featureData.admin_level_1 || "Unknown",
                 gene: featureData.gene || "Unknown",
@@ -109,21 +109,21 @@ export function MapViewer(mv = {}) {
                 }),
             );
 
-            mv.alleleVectorSource.addFeature(marker);
+            mv.VectorSource.addFeature(marker);
         });
     };
 
     /**
-     * Add all allele frequency markers to the map
+     * Add all frequency markers to the map
      */
-    mv.addAllAlleleMarkers = () => {
-        if (!mv.alleleVectorSource || !mv.features) {
+    mv.addAllMarkers = () => {
+        if (!mv.VectorSource || !mv.features) {
             console.warn("Vector source or features not available");
             return;
         }
 
         mv.features.forEach((featureData) => {
-            const freq = parseFloat(featureData.average_allele_frequency);
+            const freq = parseFloat(featureData.frequency);
             const longitude = parseFloat(featureData.longitude);
             const latitude = parseFloat(featureData.latitude);
 
@@ -134,7 +134,7 @@ export function MapViewer(mv = {}) {
 
             const marker = new Feature({
                 geometry: new Point(fromLonLat([longitude, latitude])),
-                average_allele_frequency: freq,
+                frequency: freq,
                 country: featureData.country || "Unknown",
                 admin_level_1: featureData.admin_level_1 || "Unknown",
                 gene: featureData.gene || "Unknown",
@@ -149,7 +149,7 @@ export function MapViewer(mv = {}) {
                 }),
             );
 
-            mv.alleleVectorSource.addFeature(marker);
+            mv.VectorSource.addFeature(marker);
         });
     };
 
@@ -335,20 +335,20 @@ export function MapViewer(mv = {}) {
         mv.gMap.on("pointermove", (evt) => {
             const feature = mv.gMap.forEachFeatureAtPixel(evt.pixel, (f) => f);
 
-            if (feature && feature.get("average_allele_frequency") !== undefined) {
-                const freq = feature.get("average_allele_frequency");
+            if (feature && feature.get("frequency") !== undefined) {
+                const freq = feature.get("frequency");
                 const country = feature.get("country") || "Unknown";
                 const admin = feature.get("admin_level_1") || "Unknown";
                 const gene = feature.get("gene") || "Unknown";
 
                 mv.overlay.getElement().innerHTML = `
                     <div style="text-align: center">
-                        <img src="${mv.createPieChartIcon(freq)}" width="40" style="margin: auto;" alt="Allele frequency chart" />
+                        <img src="${mv.createPieChartIcon(freq)}" width="40" style="margin: auto;" alt=" frequency chart" />
                         <br/>
                         <strong>${country}</strong><br/>
                         ${admin}<br/><br/>
                         <hr/>
-                        <strong>Allele Frequency:</strong> ${freq.toFixed(3)}<br/>
+                        <strong> Frequency:</strong> ${freq.toFixed(3)}<br/>
                         <strong>Gene:</strong> ${gene}<br/><br/>
                     </div>
                 `;
@@ -360,20 +360,20 @@ export function MapViewer(mv = {}) {
     };
 
     /**
-     * Initialize allele frequency map
+     * Initialize frequency map
      * @param {HTMLElement} target - Target DOM element for the map
      * @param {Array} featureData - Array of feature data
      * @returns {Promise<Map>} OpenLayers Map instance
      */
-    mv.initAlleleMap = async (target, featureData) => {
+    mv.initMap = async (target, featureData) => {
         if (!target) {
             throw new Error("Target element is required");
         }
 
         try {
-            // Create vector source and layer for allele markers
-            mv.alleleVectorSource = new Vector();
-            mv.alleleVectorLayer = new layer.Vector({ source: mv.alleleVectorSource });
+            // Create vector source and layer for markers
+            mv.VectorSource = new Vector();
+            mv.VectorLayer = new layer.Vector({ source: mv.VectorSource });
 
             // Setup overlay
             mv.setupOverlay();
@@ -391,7 +391,7 @@ export function MapViewer(mv = {}) {
             // Create map
             mv.gMap = new Map({
                 target: target,
-                layers: [newLayer, mv.alleleVectorLayer],
+                layers: [newLayer, mv.VectorLayer],
                 view: new View({
                     center: fromLonLat([0, 0]),
                     zoom: 2,
@@ -401,11 +401,11 @@ export function MapViewer(mv = {}) {
                 loadTilesWhileAnimating: true   // Important for smooth animation
             });
 
-            // Load allele data
+            // Load data
             mv.features = featureData;
 
             // Add all markers initially
-            mv.addAllAlleleMarkers();
+            mv.addAllMarkers();
 
             // Setup tooltip interaction
             mv.setupTooltipInteraction();
@@ -443,7 +443,7 @@ export function MapViewer(mv = {}) {
 
             return mv.gMap;
         } catch (error) {
-            console.error("Failed to initialize allele map:", error);
+            console.error("Failed to initialize map:", error);
             throw error;
         }
     };

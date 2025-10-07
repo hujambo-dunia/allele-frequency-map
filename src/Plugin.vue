@@ -8,7 +8,8 @@ import axios from "axios";
 import "ol/ol.css";
 
 const DEFAULT_LAYER = "OpenStreetMap";
-const TEST_DATASET = "http://cdn.jsdelivr.net/gh/galaxyproject/galaxy-test-data/1.freq.json";
+// const TEST_DATASET = "http://cdn.jsdelivr.net/gh/galaxyproject/galaxy-test-data/1.freq.json";
+const TEST_DATASET = "../static/1.freq.json";
 
 interface Props {
     datasetId: string;
@@ -49,7 +50,7 @@ async function initializeMap(): Promise<void> {
                     await new Promise(resolve => requestAnimationFrame(resolve));
                 }
                 
-                await mapViewer.initAlleleMap(container, featureData);
+                await mapViewer.initMap(container, featureData);
                 
                 geneOptions.value = [...new Set(featureData.map((f) => f.gene))]
                     .sort()
@@ -59,7 +60,7 @@ async function initializeMap(): Promise<void> {
                 console.error("Failed to initialize map:", error);
             }
         } catch (error) {
-            console.error("Failed to load allele data:", error);
+            console.error("Failed to load  data:", error);
         }
     } else {
         console.error("Map container is not available");
