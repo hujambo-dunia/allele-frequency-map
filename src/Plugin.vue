@@ -8,8 +8,7 @@ import axios from "axios";
 import "ol/ol.css";
 
 const DEFAULT_LAYER = "OpenStreetMap";
-// const TEST_DATASET = "http://cdn.jsdelivr.net/gh/galaxyproject/galaxy-test-data/1.freq.json";
-const TEST_DATASET = "../static/1.freq.json";
+const TEST_DATASET = "http://cdn.jsdelivr.net/gh/galaxyproject/galaxy-test-data/1.freq.json";
 
 interface Props {
     datasetId: string;
