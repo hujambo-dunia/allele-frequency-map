@@ -1,10 +1,6 @@
-import { Map, View, Graticule } from "ol";
+import { Map, View } from "ol";
 import { OSM, Vector, XYZ } from "ol/source";
-import { GeoJSON } from "ol/format";
-import * as interaction from "ol/interaction";
-import * as style from "ol/style";
 import * as layer from "ol/layer";
-import * as control from "ol/control";
 import { fromLonLat } from "ol/proj";
 import Feature from "ol/Feature";
 import Point from "ol/geom/Point";
@@ -181,8 +177,6 @@ export function MapViewer(mv = {}) {
                 // Preload tiles aggressively
                 preload: 2, // Preload 2 levels of tiles around visible area
                 cacheSize: 4096, // Increase cache size for better performance
-                // Load tiles immediately without user interaction
-                strategy: 'bbox'
             });
         } else {
             newLayerSource = new OSM({
@@ -343,12 +337,12 @@ export function MapViewer(mv = {}) {
 
                 mv.overlay.getElement().innerHTML = `
                     <div style="text-align: center">
-                        <img src="${mv.createPieChartIcon(freq)}" width="40" style="margin: auto;" alt=" frequency chart" />
+                        <img src="${mv.createPieChartIcon(freq)}" width="40" style="margin: auto;" alt="frequency chart" />
                         <br/>
                         <strong>${country}</strong><br/>
                         ${admin}<br/><br/>
                         <hr/>
-                        <strong> Frequency:</strong> ${freq.toFixed(3)}<br/>
+                        <strong>Frequency:</strong> ${freq.toFixed(3)}<br/>
                         <strong>Gene:</strong> ${gene}<br/><br/>
                     </div>
                 `;
@@ -446,235 +440,6 @@ export function MapViewer(mv = {}) {
             console.error("Failed to initialize map:", error);
             throw error;
         }
-    };
-
-    /**
-     * Set the style properties of shapes
-     * @param {string} selectedColor - Color for the geometries
-     * @returns {Object} Style configuration object
-     */
-    mv.setStyle = (selectedColor = "#0000ff") => {
-        const commonFill = new style.Fill({
-            color: "rgba(0, 0, 255, 0.1)",
-        });
-
-        const createStroke = (color = selectedColor, width = 1) => new style.Stroke({ color, width });
-
-        const createCircleImage = (radius = 5) =>
-            new style.Circle({
-                radius,
-                fill: commonFill,
-                stroke: createStroke(),
-            });
-
-        const styles = {
-            Polygon: new style.Style({
-                stroke: createStroke(),
-                fill: commonFill,
-            }),
-            Circle: new style.Style({
-                stroke: createStroke(),
-                fill: commonFill,
-            }),
-            Point: new style.Style({
-                image: createCircleImage(),
-            }),
-            LineString: new style.Style({
-                stroke: createStroke(),
-            }),
-            MultiLineString: new style.Style({
-                stroke: createStroke(),
-            }),
-            MultiPoint: new style.Style({
-                image: createCircleImage(),
-            }),
-            MultiPolygon: new style.Style({
-                stroke: createStroke(),
-                fill: commonFill,
-            }),
-            GeometryCollection: new style.Style({
-                stroke: createStroke(),
-                fill: new style.Fill({ color: selectedColor }),
-                image: new style.Circle({
-                    radius: 10,
-                    fill: null,
-                    stroke: createStroke(),
-                }),
-            }),
-        };
-
-        return styles;
-    };
-
-    /**
-     * Set up events and methods for interactions with map view
-     * @param {Vector} source - Vector source for drawing
-     * @param {string} geometryColor - Color for drawn geometries
-     * @param {string} geometryType - Type of geometry to draw
-     */
-    mv.setInteractions = (source, geometryColor, geometryType) => {
-        if (!mv.gMap || !source) {
-            console.warn("Map or source not available");
-            return;
-        }
-
-        if (geometryType === "None") {
-            return;
-        }
-
-        const drawInteraction = new interaction.Draw({
-            source: source,
-            type: geometryType,
-            freehand: true,
-        });
-
-        drawInteraction.on("drawstart", (event) => {
-            const drawStyle = new style.Style({
-                stroke: new style.Stroke({
-                    color: geometryColor,
-                    width: 2,
-                }),
-                fill: new style.Fill({
-                    color: "rgba(0, 0, 255, 0.1)",
-                }),
-            });
-            event.feature.setStyle(drawStyle);
-        });
-
-        mv.gMap.addInteraction(drawInteraction);
-    };
-
-    /**
-     * Export the map view to PNG image
-     */
-    mv.exportMap = () => {
-        if (!mv.gMap) {
-            console.warn("Map instance not available");
-            return;
-        }
-
-        mv.gMap.once("rendercomplete", (event) => {
-            const canvas = event.context.canvas;
-            const fileName = `map-export-${Date.now()}.png`;
-
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    const link = document.createElement("a");
-                    link.href = URL.createObjectURL(blob);
-                    link.download = fileName;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(link.href);
-                } else {
-                    console.error("Failed to create blob from canvas");
-                }
-            });
-        });
-
-        mv.gMap.renderSync();
-    };
-
-    /**
-     * Create the map view (legacy method)
-     * @param {Vector} vSource - Vector source
-     * @param {HTMLElement} target - Target element
-     * @param {string} geometryColor - Color for geometries
-     * @param {string} geometryType - Type of geometry
-     * @param {Function} styleFunction - Style function
-     */
-    mv.setMap = (vSource, target, geometryColor, geometryType, styleFunction) => {
-        if (!target) {
-            console.error("Target element is required");
-            return;
-        }
-
-        const tile = new layer.Tile({ source: new OSM() });
-        const fullScreen = new control.FullScreen();
-        const scaleLineControl = new control.ScaleLine();
-
-        const vectorLayer = new layer.Vector({
-            source: vSource,
-            style: styleFunction,
-        });
-
-        const view = new View({
-            center: [0, 0],
-            zoom: 2,
-        });
-
-        mv.gMap = new Map({
-            controls: control.defaults().extend([scaleLineControl, fullScreen]),
-            interactions: interaction.defaults().extend([new interaction.DragRotateAndZoom()]),
-            layers: [tile, vectorLayer],
-            target: target,
-            loadTilesWhileInteracting: true,
-            view: view,
-        });
-
-        const graticule = new Graticule({
-            strokeStyle: new style.Stroke({
-                color: "rgba(255, 120, 0, 0.9)",
-                width: 2,
-                lineDash: [0.5, 4],
-            }),
-            showLabels: true,
-        });
-
-        mv.gMap.addInteraction(new interaction.Modify({ source: vSource }));
-        mv.gMap.addControl(new control.ZoomSlider());
-        graticule.setMap(mv.gMap);
-        mv.setInteractions(vSource, geometryColor, geometryType);
-    };
-
-    /**
-     * Load the map GeoJson files (legacy method)
-     * @param {string} filePath - Path to the file
-     * @param {string} fileType - Type of file
-     * @param {string} geometryColor - Color for geometries
-     * @param {string} geometryType - Type of geometry
-     * @param {string} toExport - Export flag
-     * @param {HTMLElement} target - Target element
-     */
-    mv.loadFile = (filePath, fileType, geometryColor, geometryType, toExport, target) => {
-        if (!filePath || !target) {
-            console.error("File path and target are required");
-            return;
-        }
-
-        const formatType = new GeoJSON();
-        const selectedStyles = mv.setStyle(geometryColor);
-        const styleFunction = (feature) => {
-            const geomType = feature.getGeometry().getType();
-            return selectedStyles[geomType] || selectedStyles.Point;
-        };
-
-        if (toExport === "export") {
-            mv.exportMap();
-        }
-
-        if (fileType === "geojson") {
-            const sourceVec = new Vector({
-                format: formatType,
-                url: filePath,
-                wrapX: false,
-            });
-            mv.createMap(sourceVec, geometryColor, geometryType, styleFunction, target);
-        } else {
-            console.warn(`Unsupported file type: ${fileType}`);
-        }
-    };
-
-    /**
-     * Create map (legacy method)
-     * @param {Vector} sourceVec - Vector source
-     * @param {string} geometryColor - Color for geometries
-     * @param {string} geometryType - Type of geometry
-     * @param {Function} styleFunction - Style function
-     * @param {HTMLElement} target - Target element
-     */
-    mv.createMap = (sourceVec, geometryColor, geometryType, styleFunction, target) => {
-        mv.setMap(sourceVec, target, geometryColor, geometryType, styleFunction);
     };
 
     /**
