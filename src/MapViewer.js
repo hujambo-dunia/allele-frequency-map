@@ -229,7 +229,7 @@ export function MapViewer(mv = {}) {
                         <strong>${country}</strong><br/>
                         ${admin}<br/><br/>
                         <hr/>
-                        <strong>Average A.F.:</strong> ${freq.toFixed(3)}<br/>
+                        <strong>Allele Frequency:</strong> ${freq.toFixed(3)}<br/>
                         <strong>Gene:</strong> ${gene}<br/><br/>
                     </div>
                 `;
