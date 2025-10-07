@@ -25,6 +25,7 @@ export function MapViewer(mv = {}) {
     mv.alleleVectorLayer = null;
     mv.overlay = null;
     mv.features = null;
+    mv.currentBaseLayer = null;
 
     /**
      * Create pie chart icon for allele frequency visualization
@@ -153,37 +154,155 @@ export function MapViewer(mv = {}) {
     };
 
     /**
-     * Switch base layer visibility
+     * Switch base layer with tile preloading to prevent visible tiling
      * @param {string} selectedLayerName - Name of the layer to make visible
+     * @returns {Promise<void>} Promise that resolves when layer is fully loaded
      */
-    mv.switchBaseLayer = (selectedLayerName) => {
-        if (!selectedLayerName) {
-            console.warn("Layer name is required");
+    mv.handleBaselayerPreventMapTiling = async (selectedLayerName) => {
+        if (!selectedLayerName || !mv.gMap) {
+            console.warn("Layer name and map instance are required");
             return;
         }
 
-        const getLayer = BaseLayers[selectedLayerName];
-
-        let layerConfig = null;
-        if (getLayer.type === "XYZ") {
-            layerConfig = {
-                source: new XYZ({
-                    attributions: getLayer.attributions,
-                    url: getLayer.url,
-                    maxZoom: 19,
-                    tilePixelRatio: 1,
-                    preload: "Infinity",
-                    opacity: 1,
-                }),
-            };
-        } else {
-            layerConfig = {
-                source: new OSM(),
-                visible: true,
-            };
+        const layerConfig = BaseLayers[selectedLayerName];
+        if (!layerConfig) {
+            console.warn(`Base layer "${selectedLayerName}" not found`);
+            return;
         }
-        const newLayer = new TileLayer(layerConfig);
-        mv.gMap.getLayers().setAt(0, newLayer);
+
+        // Create the new layer
+        let newLayerSource;
+        if (layerConfig.type === "XYZ") {
+            newLayerSource = new XYZ({
+                attributions: layerConfig.attributions,
+                url: layerConfig.url,
+                maxZoom: 19,
+                tilePixelRatio: 1,
+                // Preload tiles aggressively
+                preload: 2, // Preload 2 levels of tiles around visible area
+                cacheSize: 4096, // Increase cache size for better performance
+                // Load tiles immediately without user interaction
+                strategy: 'bbox'
+            });
+        } else {
+            newLayerSource = new OSM({
+                preload: 2,
+                cacheSize: 4096
+            });
+        }
+
+        const newLayer = new TileLayer({
+            source: newLayerSource,
+            // Initially hide the layer
+            opacity: 0,
+            preload: Infinity // Preload all visible tiles
+        });
+
+        // Add the new layer as hidden (below current layer)
+        mv.gMap.addLayer(newLayer);
+
+        // Wait for tiles to load before switching
+        await mv.waitForTilesToLoad(newLayerSource);
+
+        // Now smoothly transition to the new layer
+        const oldLayer = mv.gMap.getLayers().getArray()[0];
+        
+        // Fade in the new layer
+        newLayer.setOpacity(1);
+        
+        // Remove the old layer after a brief delay to ensure smooth transition
+        setTimeout(() => {
+            mv.gMap.removeLayer(oldLayer);
+            // Move new layer to position 0 (base layer position)
+            mv.gMap.getLayers().removeAt(mv.gMap.getLayers().getLength() - 1);
+            mv.gMap.getLayers().insertAt(0, newLayer);
+        }, 300);
+
+        mv.currentBaseLayer = selectedLayerName;
+    };
+
+    /**
+     * Wait for all visible tiles to load
+     * @param {Object} source - Tile source to monitor
+     * @returns {Promise<void>} Promise that resolves when tiles are loaded
+     */
+    mv.waitForTilesToLoad = (source) => {
+        return new Promise((resolve) => {
+            let tilesLoading = 0;
+            let tilesLoaded = 0;
+            let hasStartedLoading = false;
+
+            const checkComplete = () => {
+                if (hasStartedLoading && tilesLoaded >= tilesLoading && tilesLoading > 0) {
+                    source.un('tileloadstart', onTileLoadStart);
+                    source.un('tileloadend', onTileLoadEnd);
+                    source.un('tileloaderror', onTileLoadEnd);
+                    resolve();
+                }
+            };
+
+            const onTileLoadStart = () => {
+                tilesLoading++;
+                hasStartedLoading = true;
+            };
+
+            const onTileLoadEnd = () => {
+                tilesLoaded++;
+                checkComplete();
+            };
+
+            // Listen for tile loading events
+            source.on('tileloadstart', onTileLoadStart);
+            source.on('tileloadend', onTileLoadEnd);
+            source.on('tileloaderror', onTileLoadEnd); // Treat errors as "loaded" to prevent hanging
+
+            // Force the map to start loading tiles by getting the current view extent
+            const view = mv.gMap.getView();
+            const extent = view.calculateExtent(mv.gMap.getSize());
+            const resolution = view.getResolution();
+            const projection = view.getProjection();
+
+            // Trigger tile loading by accessing tiles in current view
+            source.getTileGrid().forEachTileCoord(extent, resolution, (tileCoord) => {
+                source.getTile(tileCoord[0], tileCoord[1], tileCoord[2], 1, projection);
+            });
+
+            // Fallback timeout to prevent infinite waiting
+            const timeout = setTimeout(() => {
+                source.un('tileloadstart', onTileLoadStart);
+                source.un('tileloadend', onTileLoadEnd);
+                source.un('tileloaderror', onTileLoadEnd);
+                resolve();
+            }, 5000); // 5 second timeout
+
+            // If no tiles start loading within 500ms, assume it's ready
+            setTimeout(() => {
+                if (!hasStartedLoading) {
+                    clearTimeout(timeout);
+                    source.un('tileloadstart', onTileLoadStart);
+                    source.un('tileloadend', onTileLoadEnd);
+                    source.un('tileloaderror', onTileLoadEnd);
+                    resolve();
+                }
+            }, 500);
+        });
+    };
+
+    /**
+     * Get the current map instance (needed for external access)
+     * @returns {Map} OpenLayers Map instance
+     */
+    mv.getMap = () => {
+        return mv.gMap;
+    };
+
+    /**
+     * Switch base layer visibility (legacy method - now uses prevent tiling)
+     * @param {string} selectedLayerName - Name of the layer to make visible
+     */
+    mv.switchBaseLayer = (selectedLayerName) => {
+        // Use the new tiling prevention method
+        mv.handleBaselayerPreventMapTiling(selectedLayerName);
     };
 
     /**
@@ -243,7 +362,7 @@ export function MapViewer(mv = {}) {
     /**
      * Initialize allele frequency map
      * @param {HTMLElement} target - Target DOM element for the map
-     * @param {string} dataUrl - URL to the data file
+     * @param {Array} featureData - Array of feature data
      * @returns {Promise<Map>} OpenLayers Map instance
      */
     mv.initAlleleMap = async (target, featureData) => {
@@ -259,10 +378,14 @@ export function MapViewer(mv = {}) {
             // Setup overlay
             mv.setupOverlay();
 
-            // Create base layer array
+            // Create base layer with proper preloading
             const newLayer = new TileLayer({
-                source: new OSM(),
+                source: new OSM({
+                    preload: 2,
+                    cacheSize: 4096
+                }),
                 visible: true,
+                preload: Infinity // Preload all visible tiles
             });
 
             // Create map
@@ -274,6 +397,8 @@ export function MapViewer(mv = {}) {
                     zoom: 2,
                 }),
                 overlays: [mv.overlay],
+                loadTilesWhileInteracting: true, // Important for smooth interaction
+                loadTilesWhileAnimating: true   // Important for smooth animation
             });
 
             // Load allele data
@@ -285,10 +410,36 @@ export function MapViewer(mv = {}) {
             // Setup tooltip interaction
             mv.setupTooltipInteraction();
 
-            // Handle map resize
+            // CRITICAL FIX: Ensure proper sizing after map creation
+            // Wait for the next frame to ensure DOM is ready
+            await new Promise(resolve => requestAnimationFrame(resolve));
+            
+            // Force size update multiple times to ensure proper rendering
             mv.gMap.updateSize();
-            const resizeHandler = () => mv.gMap.updateSize();
+            
+            // Wait for initial tiles to load before considering map ready
+            await mv.waitForTilesToLoad(newLayer.getSource());
+            
+            // Final size update after tiles are loaded
+            setTimeout(() => {
+                mv.gMap.updateSize();
+                // Force a render to ensure everything is displayed
+                mv.gMap.renderSync();
+            }, 100);
+
+            // Handle window resize events
+            const resizeHandler = () => {
+                // Add a small delay to handle rapid resize events
+                clearTimeout(mv.resizeTimeout);
+                mv.resizeTimeout = setTimeout(() => {
+                    mv.gMap.updateSize();
+                }, 100);
+            };
+            
             window.addEventListener("resize", resizeHandler);
+            
+            // Store resize handler for cleanup if needed
+            mv.resizeHandler = resizeHandler;
 
             return mv.gMap;
         } catch (error) {
@@ -524,6 +675,18 @@ export function MapViewer(mv = {}) {
      */
     mv.createMap = (sourceVec, geometryColor, geometryType, styleFunction, target) => {
         mv.setMap(sourceVec, target, geometryColor, geometryType, styleFunction);
+    };
+
+    /**
+     * Cleanup map resources
+     */
+    mv.cleanup = () => {
+        if (mv.resizeHandler) {
+            window.removeEventListener("resize", mv.resizeHandler);
+        }
+        if (mv.resizeTimeout) {
+            clearTimeout(mv.resizeTimeout);
+        }
     };
 
     return mv;
