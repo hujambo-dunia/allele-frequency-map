@@ -54,24 +54,24 @@ export function MapViewer(mv = {}) {
     };
 
     /**
-     * Filter and display markers for specific gene
-     * @param {string} gene - Gene name to filter by
+     * Filter and display markers for specific ID
+     * @param {string} id - ID name to filter by
      */
-    mv.filterByGene = (gene) => {
+    mv.filterById = (id) => {
         if (!mv.VectorSource || !mv.features) {
             console.warn("Vector source or features not available");
             return;
         }
 
-        if (!gene) {
-            console.warn("Gene parameter is required");
+        if (!id) {
+            console.warn("ID parameter is required");
             return;
         }
 
         mv.overlay.setPosition(undefined); // Clear tooltips
         mv.VectorSource.clear();
 
-        const filtered = mv.features.filter((f) => f.gene === gene);
+        const filtered = mv.features.filter((f) => f.id === id);
 
         filtered.forEach((featureData) => {
             const freq = parseFloat(featureData.frequency);
@@ -93,7 +93,7 @@ export function MapViewer(mv = {}) {
                 frequency: freq,
                 country: featureData.country || "Unknown",
                 admin_level_1: featureData.admin_level_1 || "Unknown",
-                gene: featureData.gene || "Unknown",
+                id: featureData.id || "Unknown",
             });
 
             marker.setStyle(
@@ -133,7 +133,7 @@ export function MapViewer(mv = {}) {
                 frequency: freq,
                 country: featureData.country || "Unknown",
                 admin_level_1: featureData.admin_level_1 || "Unknown",
-                gene: featureData.gene || "Unknown",
+                id: featureData.id || "Unknown",
             });
 
             marker.setStyle(
@@ -333,7 +333,7 @@ export function MapViewer(mv = {}) {
                 const freq = feature.get("frequency");
                 const country = feature.get("country") || "Unknown";
                 const admin = feature.get("admin_level_1") || "Unknown";
-                const gene = feature.get("gene") || "Unknown";
+                const id = feature.get("id") || "Unknown";
 
                 mv.overlay.getElement().innerHTML = `
                     <div style="text-align: center">
@@ -343,7 +343,7 @@ export function MapViewer(mv = {}) {
                         ${admin}<br/><br/>
                         <hr/>
                         <strong>Frequency:</strong> ${freq.toFixed(3)}<br/>
-                        <strong>Gene:</strong> ${gene}<br/><br/>
+                        <strong>Gene:</strong> ${id}<br/><br/>
                     </div>
                 `;
                 mv.overlay.setPosition(evt.coordinate);

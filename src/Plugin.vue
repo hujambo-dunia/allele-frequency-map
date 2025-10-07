@@ -22,10 +22,10 @@ const props = defineProps<Props>();
 
 const mapContainer = ref<HTMLElement | null>(null);
 
-const selectedGene = ref();
+const selectedId = ref();
 const selectedLayer = ref<string>(props.settings?.map_baselayer || DEFAULT_LAYER);
 
-const geneOptions = ref([]);
+const idOptions = ref([]);
 const layerOptions = ref(Object.keys(BaseLayers).map((x) => ({ label: x, value: x })));
 const isLoadingTiles = ref(false);
 
@@ -50,8 +50,8 @@ async function initializeMap(): Promise<void> {
                 }
                 
                 await mapViewer.initMap(container, featureData);
-                
-                geneOptions.value = [...new Set(featureData.map((f) => f.gene))]
+
+                idOptions.value = [...new Set(featureData.map((f) => f.id))]
                     .sort()
                     .map((g) => ({ label: g, value: g }));
                     
@@ -84,9 +84,9 @@ watch(selectedLayer, (newValue) => {
     }
 });
 
-watch(selectedGene, (newValue) => {
+watch(selectedId, (newValue) => {
     if (mapViewer) {
-        mapViewer.filterByGene(newValue);
+        mapViewer.filterById(newValue);
     }
 });
 
@@ -124,10 +124,10 @@ async function handleBaselayerChange(newLayer: string): Promise<void> {
         />
         
         <div class="absolute top-4 right-4 bg-white p-4 rounded shadow">
-            <div v-if="geneOptions.length > 0" class="mb-3">
+            <div v-if="idOptions.length > 0" class="mb-3">
                 <div class="font-medium mb-1">Gene</div>
                 <div class="text-xs mb-1">Filter data by gene.</div>
-                <n-select v-model:value="selectedGene" :filterable="true" :options="geneOptions" />
+                <n-select v-model:value="selectedId" :filterable="true" :options="idOptions" />
             </div>
             <div>
                 <div class="font-medium mb-1">Tile Layer</div>
