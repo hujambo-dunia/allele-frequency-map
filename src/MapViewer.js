@@ -228,9 +228,9 @@ export function MapViewer(mv = {}) {
 
             const checkComplete = () => {
                 if (hasStartedLoading && tilesLoaded >= tilesLoading && tilesLoading > 0) {
-                    source.un('tileloadstart', onTileLoadStart);
-                    source.un('tileloadend', onTileLoadEnd);
-                    source.un('tileloaderror', onTileLoadEnd);
+                    source.on('tileloadstart', onTileLoadStart);
+                    source.on('tileloadend', onTileLoadEnd);
+                    source.on('tileloaderror', onTileLoadEnd);
                     resolve();
                 }
             };
