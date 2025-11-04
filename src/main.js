@@ -9,13 +9,19 @@ async function main() {
         const appElement = document.getElementById(container);
 
         if (import.meta.env.DEV) {
+            // Determine page url in dev environment, `window.location` is not available in production
+            const pageUrl = new URL(window.location.href);
+
+            // Construct the incoming data object with mock configuration and data
             const dataIncoming = {
                 root: "/",
                 visualization_config: {
-                    dataset_id: process.env.dataset_id,
+                    dataset_id: pageUrl.searchParams.get("dataset_id") || process.env.dataset_id,
                     settings: {},
                 },
             };
+
+            // Find the root app element and attach the mock data as a JSON string to its data-incoming attribute
             if (appElement) {
                 appElement.dataset.incoming = JSON.stringify(dataIncoming);
             } else {
